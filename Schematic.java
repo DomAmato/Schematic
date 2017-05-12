@@ -50,6 +50,37 @@ public class Schematic {
 		this.name = name;
 	}
 
+	public Schematic(String name, NBTTagCompound compound) {
+		offset = BlockPos.ORIGIN;
+		start = BlockPos.ORIGIN;
+		isBuilding = false;
+		firstLayer = true;
+		rotation = 0;
+		this.name = name;
+
+		width = compound.getShort("Width");
+		height = compound.getShort("Height");
+		length = compound.getShort("Length");
+		size = width * height * length;
+		byte[] addId = compound.hasKey("AddBlocks") ? compound.getByteArray("AddBlocks") : new byte[0];
+		setBlockBytes(compound.getByteArray("Blocks"), addId);
+		blockDataArray = compound.getByteArray("Data");
+		entityList = compound.getTagList("Entities", 10);
+		tileEntities = new Map[height];
+		tileList = compound.getTagList("TileEntities", 10);
+		for (int i = 0; i < tileList.tagCount(); ++i) {
+			NBTTagCompound teTag = tileList.getCompoundTagAt(i);
+			int x = teTag.getInteger("x");
+			int y = teTag.getInteger("y");
+			int z = teTag.getInteger("z");
+			Map<ChunkCoordIntPair, NBTTagCompound> map = tileEntities[y];
+			if (map == null) {
+				map = (tileEntities[y] = new HashMap<>());
+			}
+			map.put(new ChunkCoordIntPair(x, z), teTag);
+		}
+	}
+
 	public void build() {
 		if ((world == null) || !isBuilding) {
 			return;
@@ -261,17 +292,7 @@ public class Schematic {
 
 	public NBTTagCompound save() {
 		NBTTagCompound compound = new NBTTagCompound();
-		compound.setShort("Width", width);
-		compound.setShort("Height", height);
-		compound.setShort("Length", length);
-		byte[][] arr = getBlockBytes();
-		compound.setByteArray("Blocks", arr[0]);
-		if (arr.length > 1) {
-			compound.setByteArray("AddBlocks", arr[1]);
-		}
-		compound.setByteArray("Data", blockDataArray);
-		compound.setTag("TileEntities", tileList);
-		return compound;
+		return writeToNBT(compound);
 	}
 
 	public void setBlockBytes(byte[] blockId, byte[] addId) {
@@ -287,6 +308,21 @@ public class Schematic {
 			}
 			blockArray[index] = id;
 		}
+	}
+
+	public NBTTagCompound writeToNBT(NBTTagCompound compound) {
+		compound.setShort("Width", width);
+		compound.setShort("Height", height);
+		compound.setShort("Length", length);
+		byte[][] arr = getBlockBytes();
+		compound.setByteArray("Blocks", arr[0]);
+		if (arr.length > 1) {
+			compound.setByteArray("AddBlocks", arr[1]);
+		}
+		compound.setByteArray("Data", blockDataArray);
+		compound.setTag("Entities", entityList);
+		compound.setTag("TileEntities", tileList);
+		return compound;
 	}
 
 	public int xyzToIndex(int x, int y, int z) {
