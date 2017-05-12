@@ -3,6 +3,8 @@ package com.dyn.schematics;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL20;
 
+import com.rabbit.gui.render.ShaderProgram;
+
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
@@ -19,7 +21,7 @@ import net.minecraft.util.BlockPos;
 import noppes.npcs.CustomNpcs;
 
 public class SchematicRenderer2 {
-	private static final ShaderProgram SHADER_ALPHA = new ShaderProgram("dyn", null, "shaders/alpha.frag");
+	private static final ShaderProgram SHADER_ALPHA = new ShaderProgram("rabbit", null, "shaders/alpha.frag");
 	private static int displayList = -1;
 	private static boolean compiled;
 	private static Schematic compiledSchematic;
