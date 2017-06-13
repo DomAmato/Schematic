@@ -1,0 +1,23 @@
+{
+    "parent": "builtin/generated",
+	"textures": {
+		"layer0": "schematics:items/schematic"
+	},
+    "display": {
+        "thirdperson":{
+	      	"rotation": [270, 97, 315],
+	      	"translation": [-0.25, 1.20, -3.25],
+	      	"scale": [0.75, 0.75, 0.75]
+	    },
+	    "firstperson":{
+	      	"rotation": [0, 288, 0],
+	      	"translation": [-3.50, 3.50, 0.00],
+	      	"scale": [2.00, 2.00, 2.00]
+	    },
+	    "gui":{
+	      	"rotation": [0, 0, 0],
+	      	"translation": [0.00, 0.00, 0.00],
+	      	"scale": [1.00, 1.00, 1.00]
+	    }
+    }
+}
