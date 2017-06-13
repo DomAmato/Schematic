@@ -1,0 +1,16 @@
+[
+{
+  "modid": "schematics",
+  "name": "Schematics",
+  "description": "A simple schematic item for rendering",
+  "version": "1",
+  "mcversion": "1.8.9",
+  "url": "",
+  "updateUrl": "",
+  "authorList": ["Dom Amato"],
+  "credits": "Digital Youth Network, and all the people who have worked one minecraft schematics",
+  "logoFile": "",
+  "screenshots": [],
+  "dependencies": [rabbit GUI]
+}
+]
