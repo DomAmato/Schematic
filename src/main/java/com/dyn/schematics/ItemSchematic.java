@@ -112,13 +112,13 @@ public class ItemSchematic extends Item {
 
 		if (worldIn.isRemote) {
 			if (stack.hasTagCompound()) {
-			Schematic schem = new Schematic(stack.getDisplayName(), stack.getTagCompound());
-			if (SchematicRenderingRegistry.containsCompiledSchematic(schem, pos)) {
-				SchematicRenderingRegistry.rotateSchematic(schem);
-			} else {
-				SchematicRenderingRegistry.addSchematic(schem, pos, 0);
-			}
-			return true;
+				Schematic schem = new Schematic(stack.getDisplayName(), stack.getTagCompound());
+				if (SchematicRenderingRegistry.containsCompiledSchematic(schem, pos)) {
+					SchematicRenderingRegistry.rotateSchematic(schem);
+				} else {
+					SchematicRenderingRegistry.addSchematic(schem, pos, 0);
+				}
+				return true;
 			}
 		}
 

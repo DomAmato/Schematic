@@ -4,6 +4,7 @@ import org.apache.logging.log4j.Logger;
 
 import com.dyn.schematics.proxy.Proxy;
 import com.dyn.schematics.reference.Reference;
+
 import net.minecraft.item.Item;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.SidedProxy;
@@ -20,13 +21,13 @@ public class SchematicMod {
 	public static Proxy proxy;
 
 	public static Item schematic;
-	
+
 	@Mod.EventHandler
 	public void preInit(FMLPreInitializationEvent event) {
 		logger = event.getModLog();
-		
+
 		proxy.preInit();
-		
+
 		proxy.registerItem(schematic = new ItemSchematic(), "schematic");
 	}
 }

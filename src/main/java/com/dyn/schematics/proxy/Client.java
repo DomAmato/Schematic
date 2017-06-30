@@ -34,7 +34,7 @@ public class Client implements Proxy {
 		if (!schematicLocs.exists()) {
 			schematicLocs.mkdir();
 		}
-		
+
 		SchematicRegistry.addSchematicLocation(schematicLocs);
 	}
 
