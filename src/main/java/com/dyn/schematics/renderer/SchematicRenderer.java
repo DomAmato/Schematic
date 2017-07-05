@@ -39,14 +39,14 @@ public class SchematicRenderer {
 		retListId = GLAllocation.generateDisplayLists(10);
 		GL11.glNewList(retListId, GL11.GL_COMPILE);
 		try {
-			for (int i = 0; i < schematic.size; ++i) {
-				Block b = Block.getBlockById(schematic.blockArray[i]);
+			for (int i = 0; i < schematic.getSize(); ++i) {
+				Block b = Block.getBlockById(schematic.getBlockIdAtIndex(i));
 				if (b != null) {
 					if (b.getRenderType() == 3) {
-						IBlockState state = b.getStateFromMeta(schematic.blockDataArray[i]);
-						int posX = i % schematic.width;
-						int posZ = ((i - posX) / schematic.width) % schematic.length;
-						int posY = (((i - posX) / schematic.width) - posZ) / schematic.length;
+						IBlockState state = b.getStateFromMeta(schematic.getBlockMetadataAtIndex(i));
+						int posX = i % schematic.getWidth();
+						int posZ = ((i - posX) / schematic.getWidth()) % schematic.getLength();
+						int posY = (((i - posX) / schematic.getWidth()) - posZ) / schematic.getLength();
 						BlockPos pos = schematic.rotatePos(posX, posY, posZ, rotation);
 						GlStateManager.matrixMode(GL11.GL_MODELVIEW);
 						GlStateManager.pushMatrix();
