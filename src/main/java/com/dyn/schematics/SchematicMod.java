@@ -25,7 +25,7 @@ public class SchematicMod {
 	public static Proxy proxy;
 
 	public static Item schematic;
-	
+
 	public static BlockPos startPos = BlockPos.ORIGIN;
 	public static BlockPos endPos = BlockPos.ORIGIN;
 
@@ -35,7 +35,7 @@ public class SchematicMod {
 		proxy.preInit();
 		proxy.registerItem(schematic = new ItemSchematic(), "schematic");
 	}
-	
+
 	@Mod.EventHandler
 	public void serverstart(FMLServerStartingEvent event) {
 		event.registerServerCommand(new CommandBuildSchematic());

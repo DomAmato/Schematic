@@ -51,13 +51,6 @@ public class SchematicRenderingRegistry {
 		}
 	}
 
-	public static int getSchematicRotation(Schematic schematic){
-		if (compiledSchematics.containsKey(schematic.getName())) {
-			return compiledSchematics.get(schematic.getName()).getRight();
-		}
-		return 0;
-	}
-	
 	public static boolean containsCompiledSchematic(Schematic schematic) {
 		return compiledSchematics.containsKey(schematic.getName());
 	}
@@ -75,6 +68,13 @@ public class SchematicRenderingRegistry {
 					&& (compiledSchematics.get(schematic.getName()).getRight() == rotation);
 		}
 		return false;
+	}
+
+	public static int getSchematicRotation(Schematic schematic) {
+		if (compiledSchematics.containsKey(schematic.getName())) {
+			return compiledSchematics.get(schematic.getName()).getRight();
+		}
+		return 0;
 	}
 
 	public static void removeSchematic(Schematic schematic) {
@@ -99,9 +99,9 @@ public class SchematicRenderingRegistry {
 
 	@SubscribeEvent
 	public void onRenderTick(RenderWorldLastEvent event) {
-		
+
 		renderSchematicSelection();
-		
+
 		for (Pair<Integer, BlockPos> compiledSchem : compiledDisplayListId.values()) {
 			SchematicRenderer.renderCompiledSchematic(compiledSchem.getLeft(), compiledSchem.getRight());
 		}
@@ -116,97 +116,7 @@ public class SchematicRenderingRegistry {
 		}
 		toCompile.removeAll(remove);
 	}
-	
-	
-	private void renderSchematicSelection(){
-		EntityPlayer player = FMLClientHandler.instance().getClient().thePlayer;
-		if (player == null) {
-			return;
-		}
 
-		double renderPosX = TileEntityRendererDispatcher.staticPlayerX;
-		double renderPosY = TileEntityRendererDispatcher.staticPlayerY;
-		double renderPosZ = TileEntityRendererDispatcher.staticPlayerZ;
-		GlStateManager.pushMatrix();
-		{
-			GlStateManager.translate(-renderPosX + 0.5, -renderPosY + 0.5, -renderPosZ + 0.5);
-
-			GlStateManager.disableTexture2D();
-			GlStateManager.enableRescaleNormal();
-			GlStateManager.disableLighting();
-			GL11.glLineWidth(6);
-
-			boolean seeThrough = true;
-			while (true) {
-				if (seeThrough) {
-					GlStateManager.disableDepth();
-					GlStateManager.enableBlend();
-					GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-				} else {
-					GlStateManager.disableBlend();
-					GlStateManager.enableDepth();
-				}
-
-				// render start
-				if (!SchematicMod.startPos.equals(BlockPos.ORIGIN)) {
-					GlStateManager.pushMatrix();
-					{
-						GlStateManager.translate(SchematicMod.startPos.getX(), SchematicMod.startPos.getY(), SchematicMod.startPos.getZ());
-						GlStateManager.scale(0.96F, 0.96F, 0.96F);
-						if (seeThrough) {
-							GlStateManager.color(1, 1, 0, .25F);
-						} else {
-							GlStateManager.color(1, 1, 0);
-						}
-						renderBox();
-					}
-					GlStateManager.popMatrix();
-				}
-
-				// render end
-				if (!SchematicMod.endPos.equals(BlockPos.ORIGIN)) {
-					GlStateManager.pushMatrix();
-					{
-						GlStateManager.translate(SchematicMod.endPos.getX(), SchematicMod.endPos.getY(), SchematicMod.endPos.getZ());
-						GlStateManager.scale(0.98F, 0.98F, 0.98F);
-						if (seeThrough) {
-							GlStateManager.color(1, 1, 0, .25F);
-						} else {
-							GlStateManager.color(1, 1, 0);
-						}
-						renderBox();
-					}
-					GlStateManager.popMatrix();
-				}
-
-				// render box
-				if (!SchematicMod.startPos.equals(BlockPos.ORIGIN) && !SchematicMod.endPos.equals(BlockPos.ORIGIN)) {
-					
-					GlStateManager.pushMatrix();
-					{
-						GlStateManager.translate((float) (SchematicMod.startPos.getX() + SchematicMod.endPos.getX()) / 2,
-								(float) (SchematicMod.startPos.getY() + SchematicMod.endPos.getY()) / 2, (float) (SchematicMod.startPos.getZ() + SchematicMod.endPos.getZ()) / 2);
-						GlStateManager.scale(1 + Math.abs(SchematicMod.startPos.getX() - SchematicMod.endPos.getX()), 1 + Math.abs(SchematicMod.startPos.getY() - SchematicMod.endPos.getY()), 1 + Math.abs(SchematicMod.startPos.getZ() - SchematicMod.endPos.getZ()));
-						if (seeThrough) {
-							GlStateManager.color(1, 1, 1, .25F);
-						} else {
-							GlStateManager.color(1, 1, 1);
-						}
-						renderBox();
-					}
-					GlStateManager.popMatrix();
-				}
-
-				if (!seeThrough) {
-					break;
-				}
-				seeThrough = false;
-			}
-			GlStateManager.enableTexture2D();
-		}
-		GlStateManager.popMatrix();
-	}
-	
 	/**
 	 * must be translated to proper point before calling
 	 */
@@ -255,5 +165,100 @@ public class SchematicRenderingRegistry {
 		wr.pos(-0.5, 0.5, 0.5).endVertex();
 
 		Tessellator.getInstance().draw();
+	}
+
+	private void renderSchematicSelection() {
+		EntityPlayer player = FMLClientHandler.instance().getClient().thePlayer;
+		if (player == null) {
+			return;
+		}
+
+		double renderPosX = TileEntityRendererDispatcher.staticPlayerX;
+		double renderPosY = TileEntityRendererDispatcher.staticPlayerY;
+		double renderPosZ = TileEntityRendererDispatcher.staticPlayerZ;
+		GlStateManager.pushMatrix();
+		{
+			GlStateManager.translate(-renderPosX + 0.5, -renderPosY + 0.5, -renderPosZ + 0.5);
+
+			GlStateManager.disableTexture2D();
+			GlStateManager.enableRescaleNormal();
+			GlStateManager.disableLighting();
+			GL11.glLineWidth(6);
+
+			boolean seeThrough = true;
+			while (true) {
+				if (seeThrough) {
+					GlStateManager.disableDepth();
+					GlStateManager.enableBlend();
+					GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+				} else {
+					GlStateManager.disableBlend();
+					GlStateManager.enableDepth();
+				}
+
+				// render start
+				if (!SchematicMod.startPos.equals(BlockPos.ORIGIN)) {
+					GlStateManager.pushMatrix();
+					{
+						GlStateManager.translate(SchematicMod.startPos.getX(), SchematicMod.startPos.getY(),
+								SchematicMod.startPos.getZ());
+						GlStateManager.scale(0.96F, 0.96F, 0.96F);
+						if (seeThrough) {
+							GlStateManager.color(1, 1, 0, .25F);
+						} else {
+							GlStateManager.color(1, 1, 0);
+						}
+						renderBox();
+					}
+					GlStateManager.popMatrix();
+				}
+
+				// render end
+				if (!SchematicMod.endPos.equals(BlockPos.ORIGIN)) {
+					GlStateManager.pushMatrix();
+					{
+						GlStateManager.translate(SchematicMod.endPos.getX(), SchematicMod.endPos.getY(),
+								SchematicMod.endPos.getZ());
+						GlStateManager.scale(0.98F, 0.98F, 0.98F);
+						if (seeThrough) {
+							GlStateManager.color(1, 1, 0, .25F);
+						} else {
+							GlStateManager.color(1, 1, 0);
+						}
+						renderBox();
+					}
+					GlStateManager.popMatrix();
+				}
+
+				// render box
+				if (!SchematicMod.startPos.equals(BlockPos.ORIGIN) && !SchematicMod.endPos.equals(BlockPos.ORIGIN)) {
+
+					GlStateManager.pushMatrix();
+					{
+						GlStateManager.translate(
+								(float) (SchematicMod.startPos.getX() + SchematicMod.endPos.getX()) / 2,
+								(float) (SchematicMod.startPos.getY() + SchematicMod.endPos.getY()) / 2,
+								(float) (SchematicMod.startPos.getZ() + SchematicMod.endPos.getZ()) / 2);
+						GlStateManager.scale(1 + Math.abs(SchematicMod.startPos.getX() - SchematicMod.endPos.getX()),
+								1 + Math.abs(SchematicMod.startPos.getY() - SchematicMod.endPos.getY()),
+								1 + Math.abs(SchematicMod.startPos.getZ() - SchematicMod.endPos.getZ()));
+						if (seeThrough) {
+							GlStateManager.color(1, 1, 1, .25F);
+						} else {
+							GlStateManager.color(1, 1, 1);
+						}
+						renderBox();
+					}
+					GlStateManager.popMatrix();
+				}
+
+				if (!seeThrough) {
+					break;
+				}
+				seeThrough = false;
+			}
+			GlStateManager.enableTexture2D();
+		}
+		GlStateManager.popMatrix();
 	}
 }

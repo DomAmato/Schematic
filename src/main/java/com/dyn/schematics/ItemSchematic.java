@@ -5,6 +5,7 @@ import java.util.Map.Entry;
 
 import com.dyn.schematics.registry.SchematicRegistry;
 import com.dyn.schematics.registry.SchematicRenderingRegistry;
+
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityPlayerSP;
@@ -76,7 +77,7 @@ public class ItemSchematic extends Item {
 		subItems.add(new ItemStack(itemIn, 1, 0));
 		for (String schemName : SchematicRegistry.enumerateSchematics()) {
 			Schematic schem = SchematicRegistry.load(schemName);
-			if (schem != null && schem.getSize() < 100000) {
+			if ((schem != null) && (schem.getSize() < 100000)) {
 				NBTTagCompound compound = new NBTTagCompound();
 				schem.writeToNBT(compound);
 				compound.setString("title", schemName);
@@ -88,6 +89,53 @@ public class ItemSchematic extends Item {
 
 			}
 		}
+	}
+
+	/**
+	 * Called before a block is broken. Return true to prevent default block
+	 * harvesting.
+	 *
+	 * Note: In SMP, this is called on both client and server sides!
+	 *
+	 * @param itemstack
+	 *            The current ItemStack
+	 * @param pos
+	 *            Block's position in world
+	 * @param player
+	 *            The Player that is wielding the item
+	 * @return True to prevent harvesting, false to continue as normal
+	 */
+	@Override
+	public boolean onBlockStartBreak(ItemStack stack, BlockPos pos, EntityPlayer player) {
+		if (player.worldObj.isRemote) {
+			if (stack.hasTagCompound()) {
+				Schematic schem = new Schematic(stack.getDisplayName(), stack.getTagCompound());
+				if (SchematicRenderingRegistry.containsCompiledSchematic(schem, pos)) {
+					Minecraft.getMinecraft().displayGuiScreen(new GuiYesNo((result, id) -> {
+						if (result) {
+							((EntityPlayerSP) player).sendChatMessage(
+									String.format("/buildschematic " + pos.getX() + " " + pos.getY() + " " + pos.getZ()
+											+ " " + SchematicRenderingRegistry.getSchematicRotation(schem)));
+						}
+						Minecraft.getMinecraft().displayGuiScreen(null);
+					}, "Build Schematic", "Would you like to build this schematic?", 1));
+				}
+			} else if (!SchematicMod.startPos.equals(BlockPos.ORIGIN) && !SchematicMod.endPos.equals(BlockPos.ORIGIN)) {
+				Minecraft.getMinecraft().displayGuiScreen(new GuiYesNo((result, id) -> {
+					if (result) {
+						((EntityPlayerSP) player).sendChatMessage(String.format(
+								"/saveschematic " + SchematicMod.startPos.getX() + " " + SchematicMod.startPos.getY()
+										+ " " + SchematicMod.startPos.getZ() + " " + SchematicMod.endPos.getX() + " "
+										+ SchematicMod.endPos.getY() + " " + SchematicMod.endPos.getZ()));
+					}
+					SchematicMod.startPos = BlockPos.ORIGIN;
+					SchematicMod.endPos = BlockPos.ORIGIN;
+					Minecraft.getMinecraft().displayGuiScreen(null);
+				}, "Save Schematic", "Would you like to save this schematic?", 1));
+			}
+
+		}
+		return true;
 	}
 
 	/**
@@ -133,52 +181,6 @@ public class ItemSchematic extends Item {
 			}
 		}
 
-		return true;
-	}
-
-	/**
-	 * Called before a block is broken. Return true to prevent default block
-	 * harvesting.
-	 *
-	 * Note: In SMP, this is called on both client and server sides!
-	 *
-	 * @param itemstack
-	 *            The current ItemStack
-	 * @param pos
-	 *            Block's position in world
-	 * @param player
-	 *            The Player that is wielding the item
-	 * @return True to prevent harvesting, false to continue as normal
-	 */
-	public boolean onBlockStartBreak(ItemStack stack, BlockPos pos, EntityPlayer player) {
-		if (player.worldObj.isRemote) {
-			if (stack.hasTagCompound()) {
-				Schematic schem = new Schematic(stack.getDisplayName(), stack.getTagCompound());
-				if (SchematicRenderingRegistry.containsCompiledSchematic(schem, pos)) {
-					Minecraft.getMinecraft().displayGuiScreen(new GuiYesNo((result, id) -> {
-						if (result) {
-							((EntityPlayerSP) player).sendChatMessage(
-									String.format("/buildschematic " + pos.getX() + " " + pos.getY() + " " + pos.getZ()
-											+ " " + SchematicRenderingRegistry.getSchematicRotation(schem)));
-						}
-						Minecraft.getMinecraft().displayGuiScreen(null);
-					}, "Build Schematic", "Would you like to build this schematic?", 1));
-				}
-			} else if (!SchematicMod.startPos.equals(BlockPos.ORIGIN) && !SchematicMod.endPos.equals(BlockPos.ORIGIN)) {
-				Minecraft.getMinecraft().displayGuiScreen(new GuiYesNo((result, id) -> {
-					if (result) {
-						((EntityPlayerSP) player).sendChatMessage(String.format(
-								"/saveschematic " + SchematicMod.startPos.getX() + " " + SchematicMod.startPos.getY()
-										+ " " + SchematicMod.startPos.getZ() + " " + SchematicMod.endPos.getX() + " "
-										+ SchematicMod.endPos.getY() + " " + SchematicMod.endPos.getZ()));
-					}
-					SchematicMod.startPos = BlockPos.ORIGIN;
-					SchematicMod.endPos = BlockPos.ORIGIN;
-					Minecraft.getMinecraft().displayGuiScreen(null);
-				}, "Save Schematic", "Would you like to save this schematic?", 1));
-			}
-
-		}
 		return true;
 	}
 }

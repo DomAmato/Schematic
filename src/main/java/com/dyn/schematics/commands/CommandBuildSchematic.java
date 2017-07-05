@@ -18,6 +18,15 @@ public class CommandBuildSchematic extends CommandBase {
 		// TODO Auto-generated constructor stub
 	}
 
+	/**
+	 * Returns true if the given command sender is allowed to use this command.
+	 */
+	@Override
+	public boolean canCommandSenderUseCommand(ICommandSender sender) {
+		return sender.canCommandSenderUseCommand(getRequiredPermissionLevel(), getCommandName())
+				&& (sender.getCommandSenderEntity() instanceof EntityPlayer);
+	}
+
 	@Override
 	public String getCommandName() {
 		// TODO Auto-generated method stub
@@ -34,8 +43,8 @@ public class CommandBuildSchematic extends CommandBase {
 	public void processCommand(ICommandSender sender, String[] args) throws CommandException {
 		BlockPos pos = BlockPos.ORIGIN;
 		World world = sender.getEntityWorld();
-		ItemStack stack =  getCommandSenderAsPlayer(sender).getCurrentEquippedItem();
-		if(stack.getItem() instanceof ItemSchematic){
+		ItemStack stack = getCommandSenderAsPlayer(sender).getCurrentEquippedItem();
+		if (stack.getItem() instanceof ItemSchematic) {
 			Schematic schem = new Schematic(stack.getDisplayName(), stack.getTagCompound());
 			int rotation = 0;
 			try {
@@ -47,29 +56,21 @@ public class CommandBuildSchematic extends CommandBase {
 			if (args.length > 3) {
 				try {
 					rotation = Integer.parseInt(args[3]);
-					if(Math.abs(rotation) > 3){
-						if(rotation > 0){
-							rotation = (rotation/90)%4;
+					if (Math.abs(rotation) > 3) {
+						if (rotation > 0) {
+							rotation = (rotation / 90) % 4;
 						} else {
-							rotation = 4-Math.abs((rotation/90)%4);
+							rotation = 4 - Math.abs((rotation / 90) % 4);
 						}
 					}
 				} catch (NumberFormatException ex) {
 					throw new CommandException("Cannot Parse Rotation", new Object[0]);
 				}
 			}
-			
+
 			schem.build(world, pos, rotation);
 		} else {
 			throw new CommandException("Must have schematic item equipped", new Object[0]);
 		}
 	}
-
-	/**
-     * Returns true if the given command sender is allowed to use this command.
-     */
-    public boolean canCommandSenderUseCommand(ICommandSender sender)
-    {
-        return sender.canCommandSenderUseCommand(this.getRequiredPermissionLevel(), this.getCommandName()) && sender.getCommandSenderEntity() instanceof EntityPlayer;
-    }	
 }

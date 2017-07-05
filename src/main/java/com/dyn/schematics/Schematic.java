@@ -1,7 +1,6 @@
 package com.dyn.schematics;
 
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -26,6 +25,19 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.common.registry.GameData;
 
 public class Schematic {
+	// thanks
+	// https://stackoverflow.com/questions/109383/sort-a-mapkey-value-by-values-java
+	public static <K, V extends Comparable<? super V>> Map<K, V> sortByValue(Map<K, V> map) {
+		List<Map.Entry<K, V>> list = new LinkedList<>(map.entrySet());
+		Collections.sort(list, (o1, o2) -> -1 * (o1.getValue()).compareTo(o2.getValue()));
+
+		Map<K, V> result = new LinkedHashMap<>();
+		for (Map.Entry<K, V> entry : list) {
+			result.put(entry.getKey(), entry.getValue());
+		}
+		return result;
+	}
+
 	private String name;
 	private short width;
 	private short height;
@@ -34,80 +46,8 @@ public class Schematic {
 	private NBTTagList entityList;
 	private NBTTagList tileList;
 	private short[] blockIds;
+
 	private byte[] metadata;
-
-	/**
-	 * @return the name
-	 */
-	public String getName() {
-		return name;
-	}
-
-	/**
-	 * @return the width
-	 */
-	public short getWidth() {
-		return width;
-	}
-
-	/**
-	 * @return the height
-	 */
-	public short getHeight() {
-		return height;
-	}
-
-	/**
-	 * @return the length
-	 */
-	public short getLength() {
-		return length;
-	}
-
-	/**
-	 * @return the tileEntities
-	 */
-	public Map<BlockPos, NBTTagCompound> getTileEntities() {
-		return tileEntities;
-	}
-
-	/**
-	 * @return the entityList
-	 */
-	public NBTTagList getEntityList() {
-		return entityList;
-	}
-
-	/**
-	 * @return the tileList
-	 */
-	public NBTTagList getTileList() {
-		return tileList;
-	}
-
-	public short getBlockIdAt(BlockPos pos){
-		return getBlockIdAt(pos.getX(), pos.getX(), pos.getX());
-	}
-	
-	public short getBlockIdAt(int x, int y, int z){
-		return getBlockIdAtIndex(xyzToIndex(x, y, z));
-	}
-	
-	public short getBlockIdAtIndex(int i){
-		return blockIds[i];
-	}
-	
-	public short getBlockMetadataAt(BlockPos pos){
-		return getBlockMetadataAt(pos.getX(), pos.getX(), pos.getX());
-	}
-	
-	public short getBlockMetadataAt(int x, int y, int z){
-		return getBlockMetadataAtIndex(xyzToIndex(x, y, z));
-	}
-	
-	public short getBlockMetadataAtIndex(int i){
-		return metadata[i];
-	}
 
 	public Schematic(String name) {
 		this.name = name;
@@ -123,7 +63,7 @@ public class Schematic {
 		setBlockBytes(compound.getByteArray("Blocks"), addId);
 		metadata = compound.getByteArray("Data");
 		entityList = compound.getTagList("Entities", 10);
-		tileEntities = new HashMap<BlockPos, NBTTagCompound>();
+		tileEntities = new HashMap<>();
 		tileList = compound.getTagList("TileEntities", 10);
 		for (int i = 0; i < tileList.tagCount(); ++i) {
 			NBTTagCompound teTag = tileList.getCompoundTagAt(i);
@@ -135,7 +75,7 @@ public class Schematic {
 	}
 
 	public void build(World world, BlockPos start, int rotation) {
-		if (world == null || start == null) {
+		if ((world == null) || (start == null)) {
 			return;
 		}
 
@@ -155,7 +95,7 @@ public class Schematic {
 				place(world, start, rotation, x, y, z, false);
 			}
 		} else {
-			//should thread it to mitigate lag
+			// should thread it to mitigate lag
 		}
 	}
 
@@ -180,6 +120,51 @@ public class Schematic {
 			return new byte[][] { blocks };
 		}
 		return new byte[][] { blocks, addBlocks };
+	}
+
+	public short getBlockIdAt(BlockPos pos) {
+		return getBlockIdAt(pos.getX(), pos.getX(), pos.getX());
+	}
+
+	public short getBlockIdAt(int x, int y, int z) {
+		return getBlockIdAtIndex(xyzToIndex(x, y, z));
+	}
+
+	public short getBlockIdAtIndex(int i) {
+		return blockIds[i];
+	}
+
+	public short getBlockMetadataAt(BlockPos pos) {
+		return getBlockMetadataAt(pos.getX(), pos.getX(), pos.getX());
+	}
+
+	public short getBlockMetadataAt(int x, int y, int z) {
+		return getBlockMetadataAtIndex(xyzToIndex(x, y, z));
+	}
+
+	public short getBlockMetadataAtIndex(int i) {
+		return metadata[i];
+	}
+
+	/**
+	 * @return the entityList
+	 */
+	public NBTTagList getEntityList() {
+		return entityList;
+	}
+
+	/**
+	 * @return the height
+	 */
+	public short getHeight() {
+		return height;
+	}
+
+	/**
+	 * @return the length
+	 */
+	public short getLength() {
+		return length;
 	}
 
 	public Map<Block, Integer> getMaterialCosts() {
@@ -207,33 +192,44 @@ public class Schematic {
 		return sortByValue(reqBlocks);
 	}
 
-	// thanks
-	// https://stackoverflow.com/questions/109383/sort-a-mapkey-value-by-values-java
-	public static <K, V extends Comparable<? super V>> Map<K, V> sortByValue(Map<K, V> map) {
-		List<Map.Entry<K, V>> list = new LinkedList<Map.Entry<K, V>>(map.entrySet());
-		Collections.sort(list, new Comparator<Map.Entry<K, V>>() {
-			public int compare(Map.Entry<K, V> o1, Map.Entry<K, V> o2) {
-				return -1 * (o1.getValue()).compareTo(o2.getValue());
-			}
-		});
-
-		Map<K, V> result = new LinkedHashMap<K, V>();
-		for (Map.Entry<K, V> entry : list) {
-			result.put(entry.getKey(), entry.getValue());
-		}
-		return result;
-	}
-
-	public NBTTagCompound getTileEntityTag(int x, int y, int z, BlockPos pos) {
-		 NBTTagCompound tag = tileEntities.get(new BlockPos(x, y, z));
-		 tag.setInteger("x", pos.getX());
-		 tag.setInteger("y", pos.getY());
-		 tag.setInteger("z", pos.getZ());
-		 return tag;
+	/**
+	 * @return the name
+	 */
+	public String getName() {
+		return name;
 	}
 
 	public int getSize() {
 		return width * height * length;
+	}
+
+	/**
+	 * @return the tileEntities
+	 */
+	public Map<BlockPos, NBTTagCompound> getTileEntities() {
+		return tileEntities;
+	}
+
+	public NBTTagCompound getTileEntityTag(int x, int y, int z, BlockPos pos) {
+		NBTTagCompound tag = tileEntities.get(new BlockPos(x, y, z));
+		tag.setInteger("x", pos.getX());
+		tag.setInteger("y", pos.getY());
+		tag.setInteger("z", pos.getZ());
+		return tag;
+	}
+
+	/**
+	 * @return the tileList
+	 */
+	public NBTTagList getTileList() {
+		return tileList;
+	}
+
+	/**
+	 * @return the width
+	 */
+	public short getWidth() {
+		return width;
 	}
 
 	public void load(NBTTagCompound compound) {
@@ -244,7 +240,7 @@ public class Schematic {
 		setBlockBytes(compound.getByteArray("Blocks"), addId);
 		metadata = compound.getByteArray("Data");
 		entityList = compound.getTagList("Entities", 10);
-		tileEntities = new HashMap<BlockPos, NBTTagCompound>();
+		tileEntities = new HashMap<>();
 		tileList = compound.getTagList("TileEntities", 10);
 		for (int i = 0; i < tileList.tagCount(); ++i) {
 			NBTTagCompound teTag = tileList.getCompoundTagAt(i);
