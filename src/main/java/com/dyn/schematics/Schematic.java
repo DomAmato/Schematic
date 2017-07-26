@@ -96,6 +96,8 @@ public class Schematic {
 			}
 		} else {
 			// should thread it to mitigate lag
+//			final ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(1);
+//			executor.schedule(() -> block.setActive(true), 2, TimeUnit.SECONDS);
 		}
 	}
 

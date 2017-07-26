@@ -6,11 +6,14 @@ import com.dyn.schematics.commands.CommandBuildSchematic;
 import com.dyn.schematics.commands.CommandSaveSchematic;
 import com.dyn.schematics.proxy.Proxy;
 import com.dyn.schematics.reference.Reference;
+import com.dyn.schematics.registry.SchematicRenderingRegistry;
 
 import net.minecraft.item.Item;
 import net.minecraft.util.BlockPos;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.SidedProxy;
+import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 
@@ -29,6 +32,12 @@ public class SchematicMod {
 	public static BlockPos startPos = BlockPos.ORIGIN;
 	public static BlockPos endPos = BlockPos.ORIGIN;
 
+	
+	@Mod.EventHandler
+	public void init(FMLInitializationEvent event) {
+		proxy.init();
+	}
+	
 	@Mod.EventHandler
 	public void preInit(FMLPreInitializationEvent event) {
 		logger = event.getModLog();

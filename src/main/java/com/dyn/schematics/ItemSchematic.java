@@ -155,7 +155,7 @@ public class ItemSchematic extends Item {
 		}
 		return stack;
 	}
-
+ 
 	/**
 	 * Called when a Block is right-clicked with this Item
 	 */

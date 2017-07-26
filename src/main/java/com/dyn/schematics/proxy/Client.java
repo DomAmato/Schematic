@@ -6,19 +6,21 @@ import java.util.List;
 
 import com.dyn.schematics.reference.Reference;
 import com.dyn.schematics.registry.SchematicRegistry;
+import com.dyn.schematics.registry.SchematicRenderingRegistry;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.client.model.ModelLoader;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 
 public class Client implements Proxy {
 
 	@Override
 	public void init() {
-		// TODO Auto-generated method stub
+		MinecraftForge.EVENT_BUS.register(new SchematicRenderingRegistry());
 	}
 
 	@Override
