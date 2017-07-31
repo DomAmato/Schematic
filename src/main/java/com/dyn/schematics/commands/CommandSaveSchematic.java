@@ -89,13 +89,11 @@ public class CommandSaveSchematic extends CommandBase {
 
 	@Override
 	public String getCommandName() {
-		// TODO Auto-generated method stub
 		return "saveschematic";
 	}
 
 	@Override
 	public String getCommandUsage(ICommandSender sender) {
-		// TODO Auto-generated method stub
 		return "/saveschematic <x> <y> <z> <x2> <y2> <z2> [name]";
 	}
 

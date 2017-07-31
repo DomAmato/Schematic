@@ -29,13 +29,11 @@ public class CommandBuildSchematic extends CommandBase {
 
 	@Override
 	public String getCommandName() {
-		// TODO Auto-generated method stub
 		return "buildschematic";
 	}
 
 	@Override
 	public String getCommandUsage(ICommandSender sender) {
-		// TODO Auto-generated method stub
 		return "/buildschematic <x> <y> <z> [rotation] must have schematic item equipped";
 	}
 

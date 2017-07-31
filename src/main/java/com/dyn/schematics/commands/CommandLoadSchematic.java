@@ -25,13 +25,11 @@ public class CommandLoadSchematic extends CommandBase {
 
 	@Override
 	public String getCommandName() {
-		// TODO Auto-generated method stub
 		return "loadschematic";
 	}
 
 	@Override
 	public String getCommandUsage(ICommandSender sender) {
-		// TODO Auto-generated method stub
 		return "/loadschematic <name>";
 	}
 
@@ -40,7 +38,6 @@ public class CommandLoadSchematic extends CommandBase {
 		if (args.length < 1) {
 			throw new CommandException("Must specify name to load", new Object[0]);
 		}
-		System.out.println("Loading Schematic: " + args[0]);
 		Schematic schem = SchematicRegistry.load(args[0]);
 		if (schem != null) {
 			NBTTagCompound compound = new NBTTagCompound();
@@ -50,6 +47,8 @@ public class CommandLoadSchematic extends CommandBase {
 			is.setStackDisplayName(schem.getName());
 			EntityPlayerMP player = CommandBase.getCommandSenderAsPlayer(sender);
 			player.inventory.addItemStackToInventory(is);
+		} else {
+			throw new CommandException("Could not find schematic %s", new Object[] {args[0]});
 		}
 	}
 }
