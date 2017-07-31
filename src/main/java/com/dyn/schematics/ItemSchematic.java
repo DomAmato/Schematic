@@ -1,6 +1,7 @@
 package com.dyn.schematics;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 
 import com.dyn.schematics.registry.SchematicRegistry;
@@ -50,12 +51,16 @@ public class ItemSchematic extends Item {
 			NBTTagCompound nbttagcompound = stack.getTagCompound();
 
 			String schemName = nbttagcompound.getString("title");
-			tooltip.add(EnumChatFormatting.DARK_AQUA + schemName);
-			tooltip.add("");
 			int counter = 0;
 
 			Schematic schem = new Schematic(schemName, nbttagcompound);
-			for (Entry<Block, Integer> block : schem.getMaterialCosts().entrySet()) {
+
+			Map<Block, Integer> materials = schem.getRequiredMaterials();
+
+			tooltip.add(EnumChatFormatting.DARK_AQUA + schemName + EnumChatFormatting.RESET + " ("
+					+ EnumChatFormatting.GRAY + schem.getTotalMaterialCost(materials) + EnumChatFormatting.RESET + ")");
+			tooltip.add("");
+			for (Entry<Block, Integer> block : materials.entrySet()) {
 				if (counter > 5) {
 					tooltip.add("Etc...");
 					break;
@@ -155,7 +160,7 @@ public class ItemSchematic extends Item {
 		}
 		return stack;
 	}
- 
+
 	/**
 	 * Called when a Block is right-clicked with this Item
 	 */
