@@ -6,7 +6,11 @@ import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Queue;
 import java.util.Set;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import com.google.common.collect.Maps;
 
@@ -15,11 +19,13 @@ import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.properties.PropertyDirection;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.command.ICommandSender;
 import net.minecraft.init.Blocks;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.BlockPos;
+import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.registry.GameData;
@@ -74,7 +80,7 @@ public class Schematic {
 		}
 	}
 
-	public void build(World world, BlockPos start, int rotation) {
+	public void build(World world, BlockPos start, int rotation, ICommandSender sender) {
 		if ((world == null) || (start == null)) {
 			return;
 		}
@@ -95,9 +101,38 @@ public class Schematic {
 				place(world, start, rotation, x, y, z, false);
 			}
 		} else {
-			// should thread it to mitigate lag
-//			final ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(1);
-//			executor.schedule(() -> block.setActive(true), 2, TimeUnit.SECONDS);
+			sender.addChatMessage(new ChatComponentText("Building Schematic: " + name));
+			Queue<BlockPos> buildQueue = new LinkedList<>();
+			for (int i = 0; i < getSize(); i++) {
+				int x = (i) % width;
+				int z = (((i) - x) / width) % length;
+				int y = ((((i) - x) / width) - z) / length;
+				buildQueue.add(new BlockPos(x, y, z));
+			}
+			for (int i = 0; i < getSize(); i++) {
+				int x = (i) % width;
+				int z = (((i) - x) / width) % length;
+				int y = ((((i) - x) / width) - z) / length;
+				buildQueue.add(new BlockPos(x, y, z));
+			}
+			final ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(1);
+			executor.scheduleWithFixedDelay(() -> {
+				sender.addChatMessage(new ChatComponentText(
+						"Progress: " + (int) (100 * (1 - (buildQueue.size() / (float) (getSize() * 2.0)))) + "%"));
+				if (buildQueue.isEmpty()) {
+					executor.shutdown();
+				} else if (buildQueue.size() > getSize()) {
+					for (int i = 0; (i < 25000) && (buildQueue.size() >= getSize()); i++) {
+						BlockPos pos = buildQueue.poll();
+						place(world, start, rotation, pos.getX(), pos.getY(), pos.getZ(), true);
+					}
+				} else {
+					for (int i = 0; (i < 25000) && !buildQueue.isEmpty(); i++) {
+						BlockPos pos = buildQueue.poll();
+						place(world, start, rotation, pos.getX(), pos.getY(), pos.getZ(), false);
+					}
+				}
+			}, 500, 500, TimeUnit.MILLISECONDS);
 		}
 	}
 
@@ -169,7 +204,14 @@ public class Schematic {
 		return length;
 	}
 
-	public Map<Block, Integer> getMaterialCosts() {
+	/**
+	 * @return the name
+	 */
+	public String getName() {
+		return name;
+	}
+
+	public Map<Block, Integer> getRequiredMaterials() {
 		Map<Block, Integer> reqBlocks = Maps.newHashMap();
 		for (int i = 0; i < blockIds.length; i++) {
 			Block b = Block.getBlockById(blockIds[i]);
@@ -192,13 +234,6 @@ public class Schematic {
 			}
 		}
 		return sortByValue(reqBlocks);
-	}
-
-	/**
-	 * @return the name
-	 */
-	public String getName() {
-		return name;
 	}
 
 	public int getSize() {
@@ -227,30 +262,19 @@ public class Schematic {
 		return tileList;
 	}
 
+	public int getTotalMaterialCost(Map<Block, Integer> materials) {
+		int total = 0;
+		for (Entry<Block, Integer> material : materials.entrySet()) {
+			total += material.getValue();
+		}
+		return total;
+	}
+
 	/**
 	 * @return the width
 	 */
 	public short getWidth() {
 		return width;
-	}
-
-	public void load(NBTTagCompound compound) {
-		width = compound.getShort("Width");
-		height = compound.getShort("Height");
-		length = compound.getShort("Length");
-		byte[] addId = compound.hasKey("AddBlocks") ? compound.getByteArray("AddBlocks") : new byte[0];
-		setBlockBytes(compound.getByteArray("Blocks"), addId);
-		metadata = compound.getByteArray("Data");
-		entityList = compound.getTagList("Entities", 10);
-		tileEntities = new HashMap<>();
-		tileList = compound.getTagList("TileEntities", 10);
-		for (int i = 0; i < tileList.tagCount(); ++i) {
-			NBTTagCompound teTag = tileList.getCompoundTagAt(i);
-			int x = teTag.getInteger("x");
-			int y = teTag.getInteger("y");
-			int z = teTag.getInteger("z");
-			tileEntities.put(new BlockPos(x, y, z), teTag);
-		}
 	}
 
 	// we need to go over it twice because things like torches and other blocks
@@ -276,6 +300,25 @@ public class Schematic {
 					tile.markDirty();
 				}
 			}
+		}
+	}
+
+	public void readFromNBT(NBTTagCompound compound) {
+		width = compound.getShort("Width");
+		height = compound.getShort("Height");
+		length = compound.getShort("Length");
+		byte[] addId = compound.hasKey("AddBlocks") ? compound.getByteArray("AddBlocks") : new byte[0];
+		setBlockBytes(compound.getByteArray("Blocks"), addId);
+		metadata = compound.getByteArray("Data");
+		entityList = compound.getTagList("Entities", 10);
+		tileEntities = new HashMap<>();
+		tileList = compound.getTagList("TileEntities", 10);
+		for (int i = 0; i < tileList.tagCount(); ++i) {
+			NBTTagCompound teTag = tileList.getCompoundTagAt(i);
+			int x = teTag.getInteger("x");
+			int y = teTag.getInteger("y");
+			int z = teTag.getInteger("z");
+			tileEntities.put(new BlockPos(x, y, z), teTag);
 		}
 	}
 

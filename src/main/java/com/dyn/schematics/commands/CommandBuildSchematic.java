@@ -41,6 +41,9 @@ public class CommandBuildSchematic extends CommandBase {
 
 	@Override
 	public void processCommand(ICommandSender sender, String[] args) throws CommandException {
+		if (args.length < 1) {
+			throw new CommandException("Must specify a location", new Object[0]);
+		}
 		BlockPos pos = BlockPos.ORIGIN;
 		World world = sender.getEntityWorld();
 		ItemStack stack = getCommandSenderAsPlayer(sender).getCurrentEquippedItem();
@@ -68,7 +71,7 @@ public class CommandBuildSchematic extends CommandBase {
 				}
 			}
 
-			schem.build(world, pos, rotation);
+			schem.build(world, pos, rotation, sender);
 		} else {
 			throw new CommandException("Must have schematic item equipped", new Object[0]);
 		}
