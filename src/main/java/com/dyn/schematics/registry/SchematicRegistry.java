@@ -48,11 +48,10 @@ public class SchematicRegistry {
 		if (stream != null) {
 			try {
 				Schematic schema = new Schematic(name);
-				schema.load(CompressedStreamTools.readCompressed(stream));
+				schema.readFromNBT(CompressedStreamTools.readCompressed(stream));
 				stream.close();
 				return schema;
 			} catch (IOException e) {
-				// CustomNpcs.logger.catching(e);
 				return null;
 			}
 		}
