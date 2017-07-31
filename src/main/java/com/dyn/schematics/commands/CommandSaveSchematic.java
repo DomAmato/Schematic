@@ -28,10 +28,6 @@ import net.minecraftforge.fml.common.registry.GameData;
 
 public class CommandSaveSchematic extends CommandBase {
 
-	public CommandSaveSchematic() {
-		// TODO Auto-generated constructor stub
-	}
-
 	/**
 	 * Returns true if the given command sender is allowed to use this command.
 	 */
