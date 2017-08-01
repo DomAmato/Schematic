@@ -8,9 +8,6 @@ import com.dyn.schematics.registry.SchematicRegistry;
 import com.dyn.schematics.registry.SchematicRenderingRegistry;
 
 import net.minecraft.block.Block;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.entity.EntityPlayerSP;
-import net.minecraft.client.gui.GuiYesNo;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
@@ -22,7 +19,6 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
-//import noppes.npcs.controllers.SchematicController;
 
 public class ItemSchematic extends Item {
 
@@ -116,27 +112,10 @@ public class ItemSchematic extends Item {
 			if (stack.hasTagCompound()) {
 				Schematic schem = new Schematic(stack.getDisplayName(), stack.getTagCompound());
 				if (SchematicRenderingRegistry.containsCompiledSchematic(schem, pos)) {
-					Minecraft.getMinecraft().displayGuiScreen(new GuiYesNo((result, id) -> {
-						if (result) {
-							((EntityPlayerSP) player).sendChatMessage(
-									String.format("/buildschematic " + pos.getX() + " " + pos.getY() + " " + pos.getZ()
-											+ " " + SchematicRenderingRegistry.getSchematicRotation(schem)));
-						}
-						Minecraft.getMinecraft().displayGuiScreen(null);
-					}, "Build Schematic", "Would you like to build this schematic?", 1));
+					SchematicMod.proxy.openSchematicGui(true, pos, schem);
 				}
 			} else if (!SchematicMod.startPos.equals(BlockPos.ORIGIN) && !SchematicMod.endPos.equals(BlockPos.ORIGIN)) {
-				Minecraft.getMinecraft().displayGuiScreen(new GuiYesNo((result, id) -> {
-					if (result) {
-						((EntityPlayerSP) player).sendChatMessage(String.format(
-								"/saveschematic " + SchematicMod.startPos.getX() + " " + SchematicMod.startPos.getY()
-										+ " " + SchematicMod.startPos.getZ() + " " + SchematicMod.endPos.getX() + " "
-										+ SchematicMod.endPos.getY() + " " + SchematicMod.endPos.getZ()));
-					}
-					SchematicMod.startPos = BlockPos.ORIGIN;
-					SchematicMod.endPos = BlockPos.ORIGIN;
-					Minecraft.getMinecraft().displayGuiScreen(null);
-				}, "Save Schematic", "Would you like to save this schematic?", 1));
+				SchematicMod.proxy.openSchematicGui(false, pos, null);
 			}
 
 		}
