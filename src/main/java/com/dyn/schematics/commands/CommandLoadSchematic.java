@@ -42,13 +42,17 @@ public class CommandLoadSchematic extends CommandBase {
 		if (schem != null) {
 			NBTTagCompound compound = new NBTTagCompound();
 			schem.writeToNBT(compound);
-			ItemStack is = new ItemStack(SchematicMod.schematic, 1, 0);
-			is.setTagCompound(compound);
-			is.setStackDisplayName(schem.getName());
-			EntityPlayerMP player = CommandBase.getCommandSenderAsPlayer(sender);
-			player.inventory.addItemStackToInventory(is);
+			if (schem.getSize() < 600000) {
+				ItemStack is = new ItemStack(SchematicMod.schematic, 1, 0);
+				is.setTagCompound(compound);
+				is.setStackDisplayName(schem.getName());
+				EntityPlayerMP player = CommandBase.getCommandSenderAsPlayer(sender);
+				player.inventory.addItemStackToInventory(is);
+			} else {
+				throw new CommandException("Schematic is too large to load into an item", new Object[0]);
+			}
 		} else {
-			throw new CommandException("Could not find schematic %s", new Object[] {args[0]});
+			throw new CommandException("Could not find schematic %s", new Object[] { args[0] });
 		}
 	}
 }
