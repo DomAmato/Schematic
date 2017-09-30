@@ -21,7 +21,7 @@ buildscript {
     }
     dependencies {
 	    classpath "jp.classmethod.aws:gradle-aws-plugin:0.+"
-        classpath 'net.minecraftforge.gradle:ForgeGradle:2.1-SNAPSHOT'
+        classpath 'net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT'
     }
 }
 
