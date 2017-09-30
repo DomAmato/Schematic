@@ -15,14 +15,14 @@ import com.dyn.schematics.renderer.SchematicRenderer;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
+import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GLAllocation;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
-import net.minecraft.client.renderer.WorldRenderer;
 import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.util.BlockPos;
+import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.fml.client.FMLClientHandler;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -121,54 +121,55 @@ public class SchematicRenderingRegistry {
 	 * must be translated to proper point before calling
 	 */
 	private void renderBox() {
-		WorldRenderer wr = Tessellator.getInstance().getWorldRenderer();
+		Tessellator tessellator = Tessellator.getInstance();
+		BufferBuilder bufferbuilder = tessellator.getBuffer();
 
-		wr.begin(GL11.GL_LINES, DefaultVertexFormats.POSITION);
+		bufferbuilder.begin(GL11.GL_LINES, DefaultVertexFormats.POSITION);
 
 		// FRONT
-		wr.pos(-0.5, -0.5, -0.5).endVertex();
-		wr.pos(-0.5, 0.5, -0.5).endVertex();
+		bufferbuilder.pos(-0.5, -0.5, -0.5).endVertex();
+		bufferbuilder.pos(-0.5, 0.5, -0.5).endVertex();
 
-		wr.pos(-0.5, 0.5, -0.5).endVertex();
-		wr.pos(0.5, 0.5, -0.5).endVertex();
+		bufferbuilder.pos(-0.5, 0.5, -0.5).endVertex();
+		bufferbuilder.pos(0.5, 0.5, -0.5).endVertex();
 
-		wr.pos(0.5, 0.5, -0.5).endVertex();
-		wr.pos(0.5, -0.5, -0.5).endVertex();
+		bufferbuilder.pos(0.5, 0.5, -0.5).endVertex();
+		bufferbuilder.pos(0.5, -0.5, -0.5).endVertex();
 
-		wr.pos(0.5, -0.5, -0.5).endVertex();
-		wr.pos(-0.5, -0.5, -0.5).endVertex();
+		bufferbuilder.pos(0.5, -0.5, -0.5).endVertex();
+		bufferbuilder.pos(-0.5, -0.5, -0.5).endVertex();
 
 		// BACK
-		wr.pos(-0.5, -0.5, 0.5).endVertex();
-		wr.pos(-0.5, 0.5, 0.5).endVertex();
+		bufferbuilder.pos(-0.5, -0.5, 0.5).endVertex();
+		bufferbuilder.pos(-0.5, 0.5, 0.5).endVertex();
 
-		wr.pos(-0.5, 0.5, 0.5).endVertex();
-		wr.pos(0.5, 0.5, 0.5).endVertex();
+		bufferbuilder.pos(-0.5, 0.5, 0.5).endVertex();
+		bufferbuilder.pos(0.5, 0.5, 0.5).endVertex();
 
-		wr.pos(0.5, 0.5, 0.5).endVertex();
-		wr.pos(0.5, -0.5, 0.5).endVertex();
+		bufferbuilder.pos(0.5, 0.5, 0.5).endVertex();
+		bufferbuilder.pos(0.5, -0.5, 0.5).endVertex();
 
-		wr.pos(0.5, -0.5, 0.5).endVertex();
-		wr.pos(-0.5, -0.5, 0.5).endVertex();
+		bufferbuilder.pos(0.5, -0.5, 0.5).endVertex();
+		bufferbuilder.pos(-0.5, -0.5, 0.5).endVertex();
 
 		// betweens.
-		wr.pos(0.5, 0.5, -0.5).endVertex();
-		wr.pos(0.5, 0.5, 0.5).endVertex();
+		bufferbuilder.pos(0.5, 0.5, -0.5).endVertex();
+		bufferbuilder.pos(0.5, 0.5, 0.5).endVertex();
 
-		wr.pos(0.5, -0.5, -0.5).endVertex();
-		wr.pos(0.5, -0.5, 0.5).endVertex();
+		bufferbuilder.pos(0.5, -0.5, -0.5).endVertex();
+		bufferbuilder.pos(0.5, -0.5, 0.5).endVertex();
 
-		wr.pos(-0.5, -0.5, -0.5).endVertex();
-		wr.pos(-0.5, -0.5, 0.5).endVertex();
+		bufferbuilder.pos(-0.5, -0.5, -0.5).endVertex();
+		bufferbuilder.pos(-0.5, -0.5, 0.5).endVertex();
 
-		wr.pos(-0.5, 0.5, -0.5).endVertex();
-		wr.pos(-0.5, 0.5, 0.5).endVertex();
+		bufferbuilder.pos(-0.5, 0.5, -0.5).endVertex();
+		bufferbuilder.pos(-0.5, 0.5, 0.5).endVertex();
 
 		Tessellator.getInstance().draw();
 	}
 
 	private void renderSchematicSelection() {
-		EntityPlayer player = FMLClientHandler.instance().getClient().thePlayer;
+		EntityPlayer player = FMLClientHandler.instance().getClient().player;
 		if (player == null) {
 			return;
 		}

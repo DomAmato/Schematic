@@ -5,7 +5,6 @@ import org.lwjgl.opengl.GL20;
 
 import com.dyn.schematics.Schematic;
 import com.dyn.schematics.SchematicMod;
-import com.rabbit.gui.render.ShaderProgram;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
@@ -17,7 +16,8 @@ import net.minecraft.client.renderer.OpenGlHelper;
 import net.minecraft.client.renderer.RenderHelper;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
-import net.minecraft.util.BlockPos;
+import net.minecraft.util.EnumBlockRenderType;
+import net.minecraft.util.math.BlockPos;
 
 public class SchematicRenderer {
 	private static final ShaderProgram SHADER_ALPHA = new ShaderProgram("rabbit", null, "shaders/alpha.frag");
@@ -42,7 +42,7 @@ public class SchematicRenderer {
 			for (int i = 0; i < schematic.getSize(); ++i) {
 				Block b = Block.getBlockById(schematic.getBlockIdAtIndex(i));
 				if (b != null) {
-					if (b.getRenderType() == 3) {
+					if (b.getRenderType(b.getDefaultState()) == EnumBlockRenderType.MODEL) {
 						IBlockState state = b.getStateFromMeta(schematic.getBlockMetadataAtIndex(i));
 						int posX = i % schematic.getWidth();
 						int posZ = ((i - posX) / schematic.getWidth()) % schematic.getLength();
@@ -55,7 +55,7 @@ public class SchematicRenderer {
 						GlStateManager.enableBlend();
 						GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, 1, 0);
 						GlStateManager.translate(pos.getX(), pos.getY(), pos.getZ());
-						Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.locationBlocksTexture);
+						Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
 						GlStateManager.color(1.0f, 1.0f, 1.0f);
 						GlStateManager.rotate(-90.0f, 0.0f, 1.0f, 0.0f);
 						state = schematic.rotationState(state, rotation);

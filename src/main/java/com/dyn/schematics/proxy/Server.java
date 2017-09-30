@@ -5,10 +5,8 @@ import java.io.File;
 import com.dyn.schematics.Schematic;
 import com.dyn.schematics.registry.SchematicRegistry;
 
-import net.minecraft.item.Item;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.BlockPos;
-import net.minecraftforge.fml.common.registry.GameRegistry;
+import net.minecraft.util.math.BlockPos;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 
 public class Server implements Proxy {
 
@@ -31,7 +29,7 @@ public class Server implements Proxy {
 
 	@Override
 	public void preInit() {
-		File schematicLocs = new File(MinecraftServer.getServer().getDataDirectory(), "schematics");
+		File schematicLocs = new File(FMLCommonHandler.instance().getMinecraftServerInstance().getDataDirectory(), "schematics");
 
 		if (!schematicLocs.exists()) {
 			schematicLocs.mkdir();
@@ -39,15 +37,4 @@ public class Server implements Proxy {
 
 		SchematicRegistry.addSchematicLocation(schematicLocs);
 	}
-
-	@Override
-	public void registerItem(Item item, String name) {
-		item.setUnlocalizedName(name);
-		GameRegistry.registerItem(item, name);
-	}
-
-	@Override
-	public void registerItemModels(Item item, String name, int meta) {
-	}
-
 }

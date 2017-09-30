@@ -24,11 +24,12 @@ import net.minecraft.init.Blocks;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.BlockPos;
-import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.text.TextComponentString;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.common.registry.GameData;
+import net.minecraftforge.fml.common.registry.ForgeRegistries;
+import net.minecraftforge.registries.GameData;
 
 public class Schematic {
 	// thanks
@@ -101,7 +102,7 @@ public class Schematic {
 				place(world, start, rotation, x, y, z, false);
 			}
 		} else {
-			sender.addChatMessage(new ChatComponentText("Building Schematic: " + name));
+			sender.sendMessage(new TextComponentString("Building Schematic: " + name));
 			Queue<BlockPos> buildQueue = new LinkedList<>();
 			for (int i = 0; i < getSize(); i++) {
 				int x = (i) % width;
@@ -117,7 +118,7 @@ public class Schematic {
 			}
 			final ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(1);
 			executor.scheduleWithFixedDelay(() -> {
-				sender.addChatMessage(new ChatComponentText(
+				sender.sendMessage(new TextComponentString(
 						"Progress: " + (int) (100 * (1 - (buildQueue.size() / (float) (getSize() * 2.0)))) + "%"));
 				if (buildQueue.isEmpty()) {
 					executor.shutdown();
@@ -218,13 +219,13 @@ public class Schematic {
 			if (b == null) {
 				continue;
 			}
-			if (b == Blocks.grass) {
-				b = Blocks.dirt;
+			if (b == Blocks.GRASS) {
+				b = Blocks.DIRT;
 			}
 
 			int meta = metadata[i];
 			IBlockState state = b.getStateFromMeta(meta);
-			if (state.getBlock() == Blocks.air) {
+			if (state.getBlock() == Blocks.AIR) {
 				continue;
 			}
 			if (reqBlocks.containsKey(state.getBlock())) {
@@ -281,9 +282,9 @@ public class Schematic {
 	// wont place right
 	public void place(World world, BlockPos start, int rotation, int x, int y, int z, boolean flag) {
 		int i = xyzToIndex(x, y, z);
-		Block b = GameData.getBlockRegistry().getObjectById(blockIds[i]);
-		if ((b == null) || (flag && !b.isFullBlock() && (b != Blocks.air))
-				|| (!flag && (b.isFullBlock() || (b == Blocks.air)))) {
+		Block b = Block.getBlockById(blockIds[i]);
+		if ((b == null) || (flag && !b.isFullBlock(b.getDefaultState()) && (b != Blocks.AIR))
+				|| (!flag && (b.isFullBlock(b.getDefaultState()) || (b == Blocks.AIR)))) {
 			return;
 		}
 		rotation = rotation / 90;
@@ -339,7 +340,7 @@ public class Schematic {
 		if (rotation == 0) {
 			return state;
 		}
-		Set<IProperty> set = state.getProperties().keySet();
+		Set<IProperty<?>> set = state.getProperties().keySet();
 		for (IProperty prop : set) {
 			if (!(prop instanceof PropertyDirection)) {
 				continue;

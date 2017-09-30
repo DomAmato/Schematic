@@ -21,10 +21,10 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
-import net.minecraft.util.BlockPos;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.common.registry.GameData;
 
 public class CommandSaveSchematic extends CommandBase {
 
@@ -32,8 +32,8 @@ public class CommandSaveSchematic extends CommandBase {
 	 * Returns true if the given command sender is allowed to use this command.
 	 */
 	@Override
-	public boolean canCommandSenderUseCommand(ICommandSender sender) {
-		return sender.canCommandSenderUseCommand(getRequiredPermissionLevel(), getCommandName())
+	public boolean checkPermission(MinecraftServer server, ICommandSender sender) {
+		return sender.canUseCommand(getRequiredPermissionLevel(), getName())
 				&& (sender.getCommandSenderEntity() instanceof EntityPlayer);
 	}
 
@@ -49,7 +49,7 @@ public class CommandSaveSchematic extends CommandBase {
 					BlockPos curPos = bottom.add(x, y, z);
 					IBlockState state = world.getBlockState(curPos);
 					Block block = state.getBlock();
-					int id = GameData.getBlockRegistry().getId(block);
+					int id = Block.getIdFromBlock(block);
 					int meta = block.getMetaFromState(state);
 					int index = (y * width * length) + (z * width) + x;
 					if (id > 255) {
@@ -88,12 +88,12 @@ public class CommandSaveSchematic extends CommandBase {
 	}
 
 	@Override
-	public String getCommandName() {
+	public String getName() {
 		return "saveschematic";
 	}
 
 	@Override
-	public String getCommandUsage(ICommandSender sender) {
+	public String getUsage(ICommandSender sender) {
 		return "/saveschematic <x> <y> <z> <x2> <y2> <z2> [name]";
 	}
 
@@ -114,7 +114,7 @@ public class CommandSaveSchematic extends CommandBase {
 	}
 
 	@Override
-	public void processCommand(ICommandSender sender, String[] args) throws CommandException {
+	public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
 		BlockPos pos1 = BlockPos.ORIGIN;
 		try {
 			pos1 = CommandBase.parseBlockPos(sender, args, 0, false);
@@ -168,12 +168,18 @@ public class CommandSaveSchematic extends CommandBase {
 			throw new CommandException("Failed writing schematic to file", new Object[0]);
 		}
 
-		ItemStack stack = getCommandSenderAsPlayer(sender).getCurrentEquippedItem();
+		ItemStack stack = getCommandSenderAsPlayer(sender).getHeldItemMainhand();
 		if (stack.getItem() instanceof ItemSchematic) {
 			stack.setTagCompound(nbt);
 			stack.setStackDisplayName(name.split(Pattern.quote("."))[0]);
 		} else {
+			stack = getCommandSenderAsPlayer(sender).getHeldItemOffhand();
+			if (stack.getItem() instanceof ItemSchematic) {
+				stack.setTagCompound(nbt);
+				stack.setStackDisplayName(name.split(Pattern.quote("."))[0]);
+			} else {
 			throw new CommandException("Must have schematic item equipped", new Object[0]);
+			}
 		}
 	}
 }

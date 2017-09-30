@@ -2,8 +2,7 @@ package com.dyn.schematics.proxy;
 
 import com.dyn.schematics.Schematic;
 
-import net.minecraft.item.Item;
-import net.minecraft.util.BlockPos;
+import net.minecraft.util.math.BlockPos;
 
 public interface Proxy {
 	public void init();
@@ -13,8 +12,4 @@ public interface Proxy {
 	public void postInit();
 
 	public void preInit();
-
-	public void registerItem(Item item, String name);
-
-	public void registerItemModels(Item item, String name, int meta);
 }

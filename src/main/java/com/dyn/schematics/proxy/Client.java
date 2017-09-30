@@ -1,24 +1,15 @@
 package com.dyn.schematics.proxy;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-
 import com.dyn.schematics.Schematic;
 import com.dyn.schematics.SchematicMod;
-import com.dyn.schematics.reference.Reference;
 import com.dyn.schematics.registry.SchematicRegistry;
 import com.dyn.schematics.registry.SchematicRenderingRegistry;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiYesNo;
-import net.minecraft.client.resources.model.ModelResourceLocation;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.util.BlockPos;
-import net.minecraftforge.client.model.ModelLoader;
+import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.fml.common.registry.GameRegistry;
 
 public class Client implements Proxy {
 
@@ -32,7 +23,7 @@ public class Client implements Proxy {
 		if (build) {
 			Minecraft.getMinecraft().displayGuiScreen(new GuiYesNo((result, id) -> {
 				if (result) {
-					Minecraft.getMinecraft().thePlayer
+					Minecraft.getMinecraft().player
 							.sendChatMessage(String.format("/buildschematic " + pos.getX() + " " + pos.getY() + " "
 									+ pos.getZ() + " " + SchematicRenderingRegistry.getSchematicRotation(schem)));
 				}
@@ -41,7 +32,7 @@ public class Client implements Proxy {
 		} else {
 			Minecraft.getMinecraft().displayGuiScreen(new GuiYesNo((result, id) -> {
 				if (result) {
-					Minecraft.getMinecraft().thePlayer.sendChatMessage(String.format(
+					Minecraft.getMinecraft().player.sendChatMessage(String.format(
 							"/saveschematic " + SchematicMod.startPos.getX() + " " + SchematicMod.startPos.getY() + " "
 									+ SchematicMod.startPos.getZ() + " " + SchematicMod.endPos.getX() + " "
 									+ SchematicMod.endPos.getY() + " " + SchematicMod.endPos.getZ()));
@@ -69,25 +60,5 @@ public class Client implements Proxy {
 		}
 
 		SchematicRegistry.addSchematicLocation(schematicLocs);
-	}
-
-	@Override
-	public void registerItem(Item item, String name) {
-		GameRegistry.registerItem(item, name);
-		item.setUnlocalizedName(name);
-		List<ItemStack> list = new ArrayList<>();
-		item.getSubItems(item, null, list);
-		for (ItemStack stack : list) {
-			registerItemModels(item, item.getUnlocalizedName(stack), stack.getItemDamage());
-		}
-	}
-
-	@Override
-	public void registerItemModels(Item item, String name, int meta) {
-		if (name.contains("item.")) {
-			name = name.replace("item.", "");
-		}
-		ModelResourceLocation location = new ModelResourceLocation(Reference.MOD_ID + ":" + name, "inventory");
-		ModelLoader.setCustomModelResourceLocation(item, meta, location);
 	}
 }

@@ -11,6 +11,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.server.MinecraftServer;
 
 public class CommandLoadSchematic extends CommandBase {
 
@@ -18,23 +19,23 @@ public class CommandLoadSchematic extends CommandBase {
 	 * Returns true if the given command sender is allowed to use this command.
 	 */
 	@Override
-	public boolean canCommandSenderUseCommand(ICommandSender sender) {
-		return sender.canCommandSenderUseCommand(getRequiredPermissionLevel(), getCommandName())
+	public boolean checkPermission(MinecraftServer server, ICommandSender sender) {
+		return sender.canUseCommand(getRequiredPermissionLevel(), getName())
 				&& (sender.getCommandSenderEntity() instanceof EntityPlayer);
 	}
 
 	@Override
-	public String getCommandName() {
+	public String getName() {
 		return "loadschematic";
 	}
 
 	@Override
-	public String getCommandUsage(ICommandSender sender) {
+	public String getUsage(ICommandSender sender) {
 		return "/loadschematic <name>";
 	}
 
 	@Override
-	public void processCommand(ICommandSender sender, String[] args) throws CommandException {
+	public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
 		if (args.length < 1) {
 			throw new CommandException("Must specify name to load", new Object[0]);
 		}
