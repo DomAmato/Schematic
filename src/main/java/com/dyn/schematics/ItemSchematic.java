@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import com.dyn.schematics.reference.Reference;
 import com.dyn.schematics.registry.SchematicRegistry;
 import com.dyn.schematics.registry.SchematicRenderingRegistry;
 
@@ -34,6 +35,7 @@ public class ItemSchematic extends Item {
 	public ItemSchematic() {
 		maxStackSize = 1;
 		setHasSubtypes(true);
+		setCreativeTab(CreativeTabs.tabDecorations);
 	}
 
 	/**
