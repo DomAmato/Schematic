@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.util.regex.Pattern;
 
 import com.dyn.schematics.ItemSchematic;
+import com.dyn.schematics.SchematicMod;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.ITileEntityProvider;
@@ -47,6 +48,7 @@ public class CommandSaveSchematic extends CommandBase {
 			for (int z = 0; z < length; z++) {
 				for (int x = 0; x < width; x++) {
 					BlockPos curPos = bottom.add(x, y, z);
+					SchematicMod.logger.info("adding block at " + curPos + "to schematic");
 					IBlockState state = world.getBlockState(curPos);
 					Block block = state.getBlock();
 					int id = GameData.getBlockRegistry().getId(block);
@@ -140,9 +142,9 @@ public class CommandSaveSchematic extends CommandBase {
 		World world = sender.getEntityWorld();
 		NBTTagCompound nbt = new NBTTagCompound();
 
-		short width = (short) Math.abs(bottom.getX() - top.getX());
-		short height = (short) Math.abs(bottom.getY() - top.getY());
-		short length = (short) Math.abs(bottom.getZ() - top.getZ());
+		short width = (short) (1 + Math.abs(bottom.getX() - top.getX()));
+		short height = (short) (1 + Math.abs(bottom.getY() - top.getY()));
+		short length = (short) (1 + Math.abs(bottom.getZ() - top.getZ()));
 
 		nbt.setShort("Width", width);
 		nbt.setShort("Height", height);
@@ -151,6 +153,8 @@ public class CommandSaveSchematic extends CommandBase {
 		nbt.setString("Materials", "Alpha");
 
 		NBTTagList tileEntities = new NBTTagList();
+
+		SchematicMod.logger.info("Attempting to save schematic from " + bottom + " to " + top);
 
 		byte[][] arr = getBlockBytes(world, width, height, length, bottom, tileEntities);
 		nbt.setByteArray("Blocks", arr[0]);
@@ -168,10 +172,10 @@ public class CommandSaveSchematic extends CommandBase {
 			throw new CommandException("Failed writing schematic to file", new Object[0]);
 		}
 
-		ItemStack stack = getCommandSenderAsPlayer(sender).getCurrentEquippedItem();
+		ItemStack stack = CommandBase.getCommandSenderAsPlayer(sender).getCurrentEquippedItem();
 		if (stack.getItem() instanceof ItemSchematic) {
+			nbt.setString("title", name.split(Pattern.quote("."))[0]);
 			stack.setTagCompound(nbt);
-			stack.setStackDisplayName(name.split(Pattern.quote("."))[0]);
 		} else {
 			throw new CommandException("Must have schematic item equipped", new Object[0]);
 		}
