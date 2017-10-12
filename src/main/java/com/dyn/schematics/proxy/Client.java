@@ -70,38 +70,45 @@ public class Client implements Proxy {
 				TileEntity tileentity = Minecraft.getMinecraft().thePlayer.worldObj.getTileEntity(pos);
 				if ((tileentity instanceof ClaimBlockTileEntity)) {
 					if (result) {
-						if(Minecraft.getMinecraft().playerController.getCurrentGameType() == GameType.CREATIVE) {
+						if (Minecraft.getMinecraft().playerController.getCurrentGameType() == GameType.CREATIVE) {
 							NetworkManager.sendToServer(new MessageBuildSchematicFromTileEntity(pos,
 									SchematicRenderingRegistry.getSchematicRotation(schem),
 									tileentity.getBlockType().getStateFromMeta(tileentity.getBlockMetadata())
 											.getValue(BlockSchematicClaim.FACING)));
 						} else {
-							//check to make sure they have the materials needed to build it
-							Map<Block, Integer> materials = ((ClaimBlockTileEntity) tileentity).getSchematic().getRequiredMaterials();
-							
+							// check to make sure they have the materials needed to build it
+							Map<Block, Integer> materials = ((ClaimBlockTileEntity) tileentity).getSchematic()
+									.getRequiredMaterials();
+
 							InventoryPlayer inventory = new InventoryPlayer(null);
 							inventory.copyInventory(Minecraft.getMinecraft().thePlayer.inventory);
-							
-							for(Entry<Block, Integer> material : materials.entrySet()) {
+
+							for (Entry<Block, Integer> material : materials.entrySet()) {
 								int total = material.getValue();
-								if(!inventory.hasItem(Item.getItemFromBlock(material.getKey()))) {
-									Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText("You do not have the materials necessary to build this schematic, missing: " + material.getKey().getLocalizedName()));
+								if (!inventory.hasItem(Item.getItemFromBlock(material.getKey()))) {
+									Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(
+											"You do not have the materials necessary to build this schematic, missing: "
+													+ material.getKey().getLocalizedName()));
 									Minecraft.getMinecraft().displayGuiScreen(null);
 									return;
 								}
-								if(total != inventory.clearMatchingItems(Item.getItemFromBlock(material.getKey()), -1, material.getValue(), null)) {
-									Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText("You do not have enough materials to build this schematic, you need: " + material.getValue() + " "+ material.getKey().getLocalizedName()));
+								if (total != inventory.clearMatchingItems(Item.getItemFromBlock(material.getKey()), -1,
+										material.getValue(), null)) {
+									Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText(
+											"You do not have enough materials to build this schematic, you need: "
+													+ material.getValue() + " "
+													+ material.getKey().getLocalizedName()));
 									Minecraft.getMinecraft().displayGuiScreen(null);
 									return;
 								}
 							}
-							
+
 							NetworkManager.sendToServer(new MessageBuildSchematicFromTileEntity(pos,
 									SchematicRenderingRegistry.getSchematicRotation(schem),
 									tileentity.getBlockType().getStateFromMeta(tileentity.getBlockMetadata())
 											.getValue(BlockSchematicClaim.FACING)));
 						}
-						
+
 					}
 					((ClaimBlockTileEntity) tileentity).setActive(false);
 					Minecraft.getMinecraft().addScheduledTask(() -> {

@@ -28,7 +28,6 @@ import net.minecraft.util.BlockPos;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.registry.GameData;
 
 public class Schematic {
@@ -60,7 +59,7 @@ public class Schematic {
 		this.name = name;
 	}
 
-	public Schematic(String name, NBTTagCompound compound) {		
+	public Schematic(String name, NBTTagCompound compound) {
 		this.name = name;
 
 		width = compound.getShort("Width");
@@ -86,9 +85,9 @@ public class Schematic {
 			return;
 		}
 
-		//the translation values are length for E/W and width for N/S on E/W sides
-		//and the inverse for the N/S sides
-		switch(facing) {
+		// the translation values are length for E/W and width for N/S on E/W sides
+		// and the inverse for the N/S sides
+		switch (facing) {
 		case EAST:
 			rotation++;
 			start = start.west(length);
@@ -97,18 +96,18 @@ public class Schematic {
 			rotation--;
 			break;
 		case SOUTH:
-			rotation+=2;
+			rotation += 2;
 			start = start.west(width).north(length);
 			break;
 		case WEST:
-			rotation+=3;
+			rotation += 3;
 			start = start.north(width);
 			break;
 		default:
 			break;
-		
+
 		}
-		
+
 		if (getSize() < 100000) {
 			sender.addChatMessage(new ChatComponentText("Building Schematic: " + name));
 			for (int i = 0; i < getSize(); i++) {
@@ -313,15 +312,15 @@ public class Schematic {
 				|| (!flag && (b.isFullBlock() || (b == Blocks.air)))) {
 			return;
 		}
-		
+
 		if (Math.abs(rotation) > 3) {
 			if (rotation > 0) {
 				rotation = (rotation / 90) % 4;
 			} else {
-				rotation = 4 - (Math.abs(rotation) / 90) % 4;
+				rotation = 4 - ((Math.abs(rotation) / 90) % 4);
 			}
 		}
-		
+
 		BlockPos pos = start.add(rotatePos(x, y, z, rotation));
 		IBlockState state = b.getStateFromMeta(metadata[i]);
 		state = rotationState(state, rotation);

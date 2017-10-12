@@ -18,19 +18,15 @@ public class ClaimBlockTileEntity extends TileEntity {
 	private boolean active;
 	private int rotation;
 
-	public int getRotation() {
-		return rotation;
-	}
-
-	public void setRotation(int rotation) {
-		this.rotation = rotation;
-	}
-
 	@Override
 	public Packet getDescriptionPacket() {
 		NBTTagCompound tagCompound = new NBTTagCompound();
 		writeToNBT(tagCompound);
 		return new S35PacketUpdateTileEntity(pos, getBlockMetadata(), tagCompound);
+	}
+
+	public int getRotation() {
+		return rotation;
 	}
 
 	public Schematic getSchematic() {
@@ -39,6 +35,10 @@ public class ClaimBlockTileEntity extends TileEntity {
 
 	public BlockPos getSchematicPos() {
 		return schem_pos;
+	}
+
+	public boolean isActive() {
+		return active;
 	}
 
 	public void markForUpdate() {
@@ -59,16 +59,16 @@ public class ClaimBlockTileEntity extends TileEntity {
 			schematic = new Schematic(compound.getString("schem_name"), compound.getCompoundTag("schematic"));
 			schem_pos = BlockPos.fromLong(compound.getLong("schem_loc"));
 		}
-//		active = compound.getBoolean("active");
+		// active = compound.getBoolean("active");
 		rotation = compound.getInteger("rot");
-	}
-
-	public boolean isActive() {
-		return active;
 	}
 
 	public void setActive(boolean active) {
 		this.active = active;
+	}
+
+	public void setRotation(int rotation) {
+		this.rotation = rotation;
 	}
 
 	public void setSchematic(Schematic schematic, BlockPos pos) {
@@ -95,7 +95,7 @@ public class ClaimBlockTileEntity extends TileEntity {
 			compound.setTag("schematic", subcompound);
 			compound.setLong("schem_loc", schem_pos.toLong());
 		}
-//		compound.setBoolean("active", active);
+		// compound.setBoolean("active", active);
 		compound.setInteger("rot", rotation);
 	}
 }

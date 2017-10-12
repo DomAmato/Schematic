@@ -36,36 +36,6 @@ public class BlockSchematicClaim extends Block implements ITileEntityProvider {
 		setBlockBounds(7F / 16F, 0.0F, 0.05F, 10.1F / 16F, 1, 0.95F);
 	}
 
-	@Override
-	public boolean removedByPlayer(World world, BlockPos pos, EntityPlayer player, boolean willHarvest) {
-		boolean result = false;
-		if (!world.isRemote) {
-			TileEntity tileentity = world.getTileEntity(pos);
-			result = super.removedByPlayer(world, pos, player, willHarvest);
-			if (result && willHarvest) {
-				if ((tileentity instanceof ClaimBlockTileEntity)) {
-					if ((((ClaimBlockTileEntity) tileentity).getSchematic() != null)) {
-						ItemStack is = new ItemStack(SchematicMod.schematic);
-						NBTTagCompound compound = new NBTTagCompound();
-						((ClaimBlockTileEntity) tileentity).getSchematic().writeToNBT(compound);
-						compound.setString("title", ((ClaimBlockTileEntity) tileentity).getSchematic().getName()
-								.replace("" + ((ClaimBlockTileEntity) tileentity).getSchematicPos().toLong(), ""));
-
-						is.setTagCompound(compound);
-						// we have to do this here otherwise it spawns in an empty schematic
-						spawnAsEntity(world, pos, is);
-						SchematicRenderingRegistry.removeSchematic(((ClaimBlockTileEntity) tileentity).getSchematic());
-					} else {
-						spawnAsEntity(world, pos, new ItemStack(SchematicMod.schematic));
-					}
-				}
-			}
-		} else {
-			result = super.removedByPlayer(world, pos, player, willHarvest);
-		}
-		return result;
-	}
-
 	/**
 	 * Return true if an entity can be spawned inside the block (used to get the
 	 * player's bed spawn location)
@@ -86,6 +56,12 @@ public class BlockSchematicClaim extends Block implements ITileEntityProvider {
 	}
 
 	@Override
+	public List<ItemStack> getDrops(IBlockAccess world, BlockPos pos, IBlockState state, int fortune) {
+		// we need this so that multiple items dont drop
+		return new ArrayList<>();
+	}
+
+	@Override
 	@SideOnly(Side.CLIENT)
 	public Item getItem(World worldIn, BlockPos pos) {
 		return SchematicMod.schematic;
@@ -99,12 +75,6 @@ public class BlockSchematicClaim extends Block implements ITileEntityProvider {
 		return SchematicMod.schematic;
 	}
 
-	@Override
-	public List<ItemStack> getDrops(IBlockAccess world, BlockPos pos, IBlockState state, int fortune) {
-		//we need this so that multiple items dont drop
-		return new ArrayList<ItemStack>();
-	}
-
 	/**
 	 * Called when a user uses the creative pick block button on this block
 	 *
@@ -113,6 +83,7 @@ public class BlockSchematicClaim extends Block implements ITileEntityProvider {
 	 * @return A ItemStack to add to the player's inventory, Null if nothing should
 	 *         be added.
 	 */
+	@Override
 	public ItemStack getPickBlock(MovingObjectPosition target, World world, BlockPos pos, EntityPlayer player) {
 		TileEntity tileentity = world.getTileEntity(pos);
 		if (tileentity instanceof ClaimBlockTileEntity) {
@@ -134,29 +105,6 @@ public class BlockSchematicClaim extends Block implements ITileEntityProvider {
 	public AxisAlignedBB getSelectedBoundingBox(World worldIn, BlockPos pos) {
 		setBlockBoundsBasedOnState(worldIn, pos);
 		return super.getSelectedBoundingBox(worldIn, pos);
-	}
-
-	@Override
-	public void setBlockBoundsBasedOnState(IBlockAccess worldIn, BlockPos pos) {
-		EnumFacing enumfacing = (EnumFacing) worldIn.getBlockState(pos).getValue(FACING);
-
-		switch (enumfacing) {
-		case EAST:
-			setBlockBounds(7F / 16F, 0.0F, 0.05F, 10.1F / 16F, 1, 0.95F);
-			break;
-		case WEST:
-			setBlockBounds(1 - 10.1F / 16F, 0.0F, 0.05F, 1 - 7F / 16F, 1, 0.95F);
-			break;
-		case SOUTH:
-			setBlockBounds(0.05F, 0.0F, 7F / 16F, 0.95F, 1, 10.1F / 16F);
-			break;
-		case NORTH:
-			setBlockBounds(0.05F, 0.0F, 1 - 10.1F / 16F, 0.95F, 1, 1 - 7F / 16F);
-			break;
-		default:
-			setBlockBounds(7F / 16F, 0.0F, 0.05F, 10.1F / 16F, 1, 0.95F);
-			break;
-		}
 	}
 
 	@Override
@@ -220,9 +168,62 @@ public class BlockSchematicClaim extends Block implements ITileEntityProvider {
 				&& ((ClaimBlockTileEntity) tileentity).isActive()) {
 			Minecraft.getMinecraft().addScheduledTask(() -> {
 				SchematicRenderingRegistry.addSchematic(((ClaimBlockTileEntity) tileentity).getSchematic(),
-						((ClaimBlockTileEntity) tileentity).getSchematicPos(), state.getValue(FACING),
-						((ClaimBlockTileEntity) tileentity).getRotation());
+						((ClaimBlockTileEntity) tileentity).getSchematicPos(),
+						state.getValue(BlockSchematicClaim.FACING), ((ClaimBlockTileEntity) tileentity).getRotation());
 			});
+		}
+	}
+
+	@Override
+	public boolean removedByPlayer(World world, BlockPos pos, EntityPlayer player, boolean willHarvest) {
+		boolean result = false;
+		if (!world.isRemote) {
+			TileEntity tileentity = world.getTileEntity(pos);
+			result = super.removedByPlayer(world, pos, player, willHarvest);
+			if (result && willHarvest) {
+				if ((tileentity instanceof ClaimBlockTileEntity)) {
+					if ((((ClaimBlockTileEntity) tileentity).getSchematic() != null)) {
+						ItemStack is = new ItemStack(SchematicMod.schematic);
+						NBTTagCompound compound = new NBTTagCompound();
+						((ClaimBlockTileEntity) tileentity).getSchematic().writeToNBT(compound);
+						compound.setString("title", ((ClaimBlockTileEntity) tileentity).getSchematic().getName()
+								.replace("" + ((ClaimBlockTileEntity) tileentity).getSchematicPos().toLong(), ""));
+
+						is.setTagCompound(compound);
+						// we have to do this here otherwise it spawns in an empty schematic
+						Block.spawnAsEntity(world, pos, is);
+						SchematicRenderingRegistry.removeSchematic(((ClaimBlockTileEntity) tileentity).getSchematic());
+					} else {
+						Block.spawnAsEntity(world, pos, new ItemStack(SchematicMod.schematic));
+					}
+				}
+			}
+		} else {
+			result = super.removedByPlayer(world, pos, player, willHarvest);
+		}
+		return result;
+	}
+
+	@Override
+	public void setBlockBoundsBasedOnState(IBlockAccess worldIn, BlockPos pos) {
+		EnumFacing enumfacing = worldIn.getBlockState(pos).getValue(BlockSchematicClaim.FACING);
+
+		switch (enumfacing) {
+		case EAST:
+			setBlockBounds(7F / 16F, 0.0F, 0.05F, 10.1F / 16F, 1, 0.95F);
+			break;
+		case WEST:
+			setBlockBounds(1 - (10.1F / 16F), 0.0F, 0.05F, 1 - (7F / 16F), 1, 0.95F);
+			break;
+		case SOUTH:
+			setBlockBounds(0.05F, 0.0F, 7F / 16F, 0.95F, 1, 10.1F / 16F);
+			break;
+		case NORTH:
+			setBlockBounds(0.05F, 0.0F, 1 - (10.1F / 16F), 0.95F, 1, 1 - (7F / 16F));
+			break;
+		default:
+			setBlockBounds(7F / 16F, 0.0F, 0.05F, 10.1F / 16F, 1, 0.95F);
+			break;
 		}
 	}
 }

@@ -41,18 +41,18 @@ public class SchematicRenderer {
 		retListId = GLAllocation.generateDisplayLists(2);
 		GL11.glNewList(retListId, GL11.GL_COMPILE);
 		try {
-			switch(face) {
+			switch (face) {
 			case EAST:
-				GlStateManager.rotate(90*face.getHorizontalIndex(), 0, 1, 0);
+				GlStateManager.rotate(90 * face.getHorizontalIndex(), 0, 1, 0);
 				break;
 			case NORTH:
-				GlStateManager.rotate(90*face.getOpposite().getHorizontalIndex(), 0, 1, 0);
+				GlStateManager.rotate(90 * face.getOpposite().getHorizontalIndex(), 0, 1, 0);
 				break;
 			case SOUTH:
-				GlStateManager.rotate(90*face.getOpposite().getHorizontalIndex(), 0, 1, 0);
+				GlStateManager.rotate(90 * face.getOpposite().getHorizontalIndex(), 0, 1, 0);
 				break;
 			case WEST:
-				GlStateManager.rotate(90*face.getHorizontalIndex(), 0, 1, 0);
+				GlStateManager.rotate(90 * face.getHorizontalIndex(), 0, 1, 0);
 				break;
 			default:
 				break;
@@ -105,7 +105,7 @@ public class SchematicRenderer {
 					GL20.glUseProgram(0);
 				}
 				RenderHelper.disableStandardItemLighting();
-//				GlStateManager.translate(-1.0f, 0.0f, -1.0f);
+				// GlStateManager.translate(-1.0f, 0.0f, -1.0f);
 				GlStateManager.popMatrix();
 				return retListId;
 			}
@@ -115,7 +115,7 @@ public class SchematicRenderer {
 			GL20.glUseProgram(0);
 		}
 		RenderHelper.disableStandardItemLighting();
-//		GlStateManager.translate(-1.0f, 0.0f, -1.0f);
+		// GlStateManager.translate(-1.0f, 0.0f, -1.0f);
 		GlStateManager.popMatrix();
 		// we should only get here if there was a gl error...
 		return -1;
@@ -139,7 +139,7 @@ public class SchematicRenderer {
 			GL20.glUseProgram(0);
 		}
 		RenderHelper.disableStandardItemLighting();
-//		GlStateManager.translate(-1.0f, 0.0f, -1.0f);
+		// GlStateManager.translate(-1.0f, 0.0f, -1.0f);
 		GlStateManager.popMatrix();
 	}
 }

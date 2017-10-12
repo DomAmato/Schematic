@@ -172,65 +172,65 @@ public class ItemSchematic extends Item {
 				if ((tileentity instanceof ClaimBlockTileEntity)
 						&& !ItemBlock.setTileEntityNBT(worldIn, playerIn, pos, stack)) {
 					BlockPos schem_pos;
-					
-						switch (side) {
+
+					switch (side) {
+					case EAST:
+						schem_pos = pos;
+						break;
+					case NORTH:
+						schem_pos = pos.south();
+						break;
+					case SOUTH:
+						schem_pos = pos.east();
+						break;
+					case WEST:
+						schem_pos = pos.south().east();
+						break;
+					default:
+						schem_pos = pos;
+						break;
+					case DOWN:
+						schem_pos = pos.up();
+						switch (playerIn.getHorizontalFacing()) {
 						case EAST:
-							schem_pos = pos;
+							schem_pos = pos.up().south().east();
 							break;
 						case NORTH:
-							schem_pos = pos.south();
+							schem_pos = pos.up().east();
 							break;
 						case SOUTH:
-							schem_pos = pos.east();
+							schem_pos = pos.up().south();
 							break;
 						case WEST:
-							schem_pos = pos.south().east();
+							schem_pos = pos.up();
 							break;
 						default:
 							schem_pos = pos;
 							break;
-						case DOWN:
-							schem_pos = pos.up();
-							switch(playerIn.getHorizontalFacing()) {
-							case EAST:
-								schem_pos = pos.up().south().east();
-								break;
-							case NORTH:
-								schem_pos = pos.up().east();
-								break;
-							case SOUTH:
-								schem_pos = pos.up().south();
-								break;
-							case WEST:
-								schem_pos = pos.up();
-								break;
-							default:
-								schem_pos = pos;
-								break;
-							
-							}
-							break;
-						case UP:
-							switch(playerIn.getHorizontalFacing()) {
-							case EAST:
-								schem_pos = pos.down().south().east();
-								break;
-							case NORTH:
-								schem_pos = pos.down().east();
-								break;
-							case SOUTH:
-								schem_pos = pos.down().south();
-								break;
-							case WEST:
-								schem_pos = pos.down();
-								break;
-							default:
-								schem_pos = pos;
-								break;
-							}
-							break;
 
 						}
+						break;
+					case UP:
+						switch (playerIn.getHorizontalFacing()) {
+						case EAST:
+							schem_pos = pos.down().south().east();
+							break;
+						case NORTH:
+							schem_pos = pos.down().east();
+							break;
+						case SOUTH:
+							schem_pos = pos.down().south();
+							break;
+						case WEST:
+							schem_pos = pos.down();
+							break;
+						default:
+							schem_pos = pos;
+							break;
+						}
+						break;
+
+					}
 					Schematic schem = new Schematic(stack.getTagCompound().getString("title") + schem_pos.toLong(),
 							stack.getTagCompound());
 					((ClaimBlockTileEntity) tileentity).setSchematic(schem, schem_pos);

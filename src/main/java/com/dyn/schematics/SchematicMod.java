@@ -36,7 +36,7 @@ public class SchematicMod {
 	public static Item schematic;
 	public static Block schematicBlockStand;
 	public static Block schematicBlockWall;
-	
+
 	public static CreativeTabs schemTab = new SchematicsTab();
 
 	public static BlockPos startPos = BlockPos.ORIGIN;

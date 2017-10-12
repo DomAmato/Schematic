@@ -2,23 +2,17 @@ package com.dyn.schematics.network.messages;
 
 import java.util.Map.Entry;
 
-import com.dyn.schematics.Schematic;
 import com.dyn.schematics.SchematicMod;
-import com.dyn.schematics.block.BlockSchematicClaim;
-import com.dyn.schematics.block.BlockSchematicClaimStand;
 import com.dyn.schematics.block.ClaimBlockTileEntity;
-import com.dyn.schematics.registry.SchematicRenderingRegistry;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.block.Block;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.BlockPos;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.world.World;
-import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
@@ -70,6 +64,10 @@ public class MessageBuildSchematicFromTileEntity implements IMessage {
 		facing = EnumFacing.VALUES[buf.readInt()];
 	}
 
+	public EnumFacing getFacing() {
+		return facing;
+	}
+
 	/**
 	 * @return the pos
 	 */
@@ -86,10 +84,6 @@ public class MessageBuildSchematicFromTileEntity implements IMessage {
 		buf.writeLong(pos.toLong());
 		buf.writeInt(rotation);
 		buf.writeInt(facing.getIndex());
-	}
-
-	public EnumFacing getFacing() {
-		return facing;
 	}
 
 }

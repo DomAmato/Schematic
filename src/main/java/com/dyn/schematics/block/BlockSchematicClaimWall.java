@@ -30,7 +30,7 @@ public class BlockSchematicClaimWall extends BlockSchematicClaim {
 	 */
 	@Override
 	public IBlockState getStateFromMeta(int meta) {
-		EnumFacing enumfacing = EnumFacing.getFront(meta&7);
+		EnumFacing enumfacing = EnumFacing.getFront(meta & 7);
 
 		return getDefaultState().withProperty(BlockSchematicClaim.FACING, enumfacing);
 	}

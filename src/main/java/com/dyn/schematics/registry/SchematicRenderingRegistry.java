@@ -27,7 +27,6 @@ import net.minecraft.util.BlockPos;
 import net.minecraft.util.EnumFacing;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.fml.client.FMLClientHandler;
-import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 public class SchematicRenderingRegistry {
@@ -113,9 +112,10 @@ public class SchematicRenderingRegistry {
 			SchematicRenderingRegistry.toCompile.add(new ImmutableTriple<>(
 					SchematicRenderingRegistry.compiledSchematics.get(schematic.getName()).getLeft(),
 					SchematicRenderingRegistry.compiledSchematics.get(schematic.getName()).getMiddle(),
-					new ImmutablePair<>(SchematicRenderingRegistry.compiledSchematics.get(schematic.getName()).getRight().getLeft(),
-					(1 + SchematicRenderingRegistry.compiledSchematics.get(schematic.getName()).getRight().getRight())
-							% 4)));
+					new ImmutablePair<>(
+							SchematicRenderingRegistry.compiledSchematics.get(schematic.getName()).getRight().getLeft(),
+							(1 + SchematicRenderingRegistry.compiledSchematics.get(schematic.getName()).getRight()
+									.getRight()) % 4)));
 			// delete the display list associated with the schematic
 			Minecraft.getMinecraft().addScheduledTask(() -> {
 				GLAllocation.deleteDisplayLists(SchematicRenderingRegistry.compiledDisplayListId
