@@ -1,0 +1,8 @@
+{
+    "variants": {
+        "facing=north": { "model": "schematics:schem_block_wall", "y": 180},
+        "facing=south": { "model": "schematics:schem_block_wall" },
+        "facing=west":  { "model": "schematics:schem_block_wall", "y": 90 },
+        "facing=east":  { "model": "schematics:schem_block_wall", "y": 270 }
+    }
+}
