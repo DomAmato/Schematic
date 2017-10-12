@@ -11,6 +11,7 @@ import net.minecraft.command.NumberInvalidException;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.BlockPos;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.world.World;
 
 public class CommandBuildSchematic extends CommandBase {
@@ -35,7 +36,7 @@ public class CommandBuildSchematic extends CommandBase {
 
 	@Override
 	public String getCommandUsage(ICommandSender sender) {
-		return "/buildschematic <x> <y> <z> [rotation] [name|equipped schematic]";
+		return "/buildschematic <x> <y> <z> [rotation] [facing] [name|equipped schematic]";
 	}
 
 	@Override
@@ -45,11 +46,12 @@ public class CommandBuildSchematic extends CommandBase {
 		}
 		BlockPos pos = BlockPos.ORIGIN;
 		World world = sender.getEntityWorld();
-		if (args.length < 5) {
-			ItemStack stack = getCommandSenderAsPlayer(sender).getCurrentEquippedItem();
+		if (args.length < 6) {
+			ItemStack stack = CommandBase.getCommandSenderAsPlayer(sender).getCurrentEquippedItem();
 			if (stack.getItem() instanceof ItemSchematic) {
 				Schematic schem = new Schematic(stack.getDisplayName(), stack.getTagCompound());
 				int rotation = 0;
+				EnumFacing facing = EnumFacing.SOUTH;
 				try {
 					pos = CommandBase.parseBlockPos(sender, args, 0, false);
 				} catch (NumberInvalidException e) {
@@ -71,16 +73,26 @@ public class CommandBuildSchematic extends CommandBase {
 					}
 				}
 
-				schem.build(world, pos, rotation, sender);
+				if (args.length == 5) {
+					facing = EnumFacing.valueOf(args[4]);
+				}
+
+				schem.build(world, pos, rotation, facing, sender);
 			} else {
 				throw new CommandException("Must have schematic item equipped", new Object[0]);
 			}
 		} else {
-			Schematic schem = SchematicRegistry.load(args[4]);
+			Schematic schem = SchematicRegistry.load(args[5]);
 			if (schem == null) {
 				throw new CommandException("Could not find schematic %s", new Object[] { args[4] });
 			}
 			int rotation = 0;
+			EnumFacing facing = EnumFacing.SOUTH;
+			try {
+				facing = EnumFacing.valueOf(args[4]);
+			} catch (Exception e) {
+				throw new CommandException("Facing Direction could not be parsed", new Object[0]);
+			}
 			try {
 				pos = CommandBase.parseBlockPos(sender, args, 0, false);
 			} catch (NumberInvalidException e) {
@@ -102,7 +114,7 @@ public class CommandBuildSchematic extends CommandBase {
 				}
 			}
 
-			schem.build(world, pos, rotation, sender);
+			schem.build(world, pos, rotation, facing, sender);
 		}
 	}
 }
