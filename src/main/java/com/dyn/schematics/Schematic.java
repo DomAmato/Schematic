@@ -28,6 +28,7 @@ import net.minecraft.util.BlockPos;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.registry.GameData;
 
 public class Schematic {
@@ -59,7 +60,7 @@ public class Schematic {
 		this.name = name;
 	}
 
-	public Schematic(String name, NBTTagCompound compound) {
+	public Schematic(String name, NBTTagCompound compound) {		
 		this.name = name;
 
 		width = compound.getShort("Width");
@@ -80,12 +81,36 @@ public class Schematic {
 		}
 	}
 
-	public void build(World world, BlockPos start, int rotation, ICommandSender sender) {
+	public void build(World world, BlockPos start, int rotation, EnumFacing facing, ICommandSender sender) {
 		if ((world == null) || (start == null)) {
 			return;
 		}
 
+		//the translation values are length for E/W and width for N/S on E/W sides
+		//and the inverse for the N/S sides
+		switch(facing) {
+		case EAST:
+			rotation++;
+			start = start.west(length);
+			break;
+		case NORTH:
+			rotation--;
+			break;
+		case SOUTH:
+			rotation+=2;
+			start = start.west(width).north(length);
+			break;
+		case WEST:
+			rotation+=3;
+			start = start.north(width);
+			break;
+		default:
+			break;
+		
+		}
+		
 		if (getSize() < 100000) {
+			sender.addChatMessage(new ChatComponentText("Building Schematic: " + name));
 			for (int i = 0; i < getSize(); i++) {
 				int x = i % width;
 				int z = ((i - x) / width) % length;
@@ -115,6 +140,8 @@ public class Schematic {
 				int y = ((((i) - x) / width) - z) / length;
 				buildQueue.add(new BlockPos(x, y, z));
 			}
+			final int immutable_rotation = rotation;
+			final BlockPos immutable_pos = start;
 			final ScheduledThreadPoolExecutor executor = new ScheduledThreadPoolExecutor(1);
 			executor.scheduleWithFixedDelay(() -> {
 				sender.addChatMessage(new ChatComponentText(
@@ -124,12 +151,12 @@ public class Schematic {
 				} else if (buildQueue.size() > getSize()) {
 					for (int i = 0; (i < 25000) && (buildQueue.size() >= getSize()); i++) {
 						BlockPos pos = buildQueue.poll();
-						place(world, start, rotation, pos.getX(), pos.getY(), pos.getZ(), true);
+						place(world, immutable_pos, immutable_rotation, pos.getX(), pos.getY(), pos.getZ(), true);
 					}
 				} else {
 					for (int i = 0; (i < 25000) && !buildQueue.isEmpty(); i++) {
 						BlockPos pos = buildQueue.poll();
-						place(world, start, rotation, pos.getX(), pos.getY(), pos.getZ(), false);
+						place(world, immutable_pos, immutable_rotation, pos.getX(), pos.getY(), pos.getZ(), false);
 					}
 				}
 			}, 500, 500, TimeUnit.MILLISECONDS);
@@ -233,7 +260,7 @@ public class Schematic {
 				reqBlocks.put(state.getBlock(), 1);
 			}
 		}
-		return sortByValue(reqBlocks);
+		return Schematic.sortByValue(reqBlocks);
 	}
 
 	public int getSize() {
@@ -286,11 +313,19 @@ public class Schematic {
 				|| (!flag && (b.isFullBlock() || (b == Blocks.air)))) {
 			return;
 		}
-		rotation = rotation / 90;
+		
+		if (Math.abs(rotation) > 3) {
+			if (rotation > 0) {
+				rotation = (rotation / 90) % 4;
+			} else {
+				rotation = 4 - (Math.abs(rotation) / 90) % 4;
+			}
+		}
+		
 		BlockPos pos = start.add(rotatePos(x, y, z, rotation));
 		IBlockState state = b.getStateFromMeta(metadata[i]);
 		state = rotationState(state, rotation);
-		world.setBlockState(pos, state, 2);
+		world.setBlockState(pos, state, 3);
 		if (state.getBlock() instanceof ITileEntityProvider) {
 			TileEntity tile = world.getTileEntity(pos);
 			if (tile != null) {

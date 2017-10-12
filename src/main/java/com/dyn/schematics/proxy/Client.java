@@ -3,24 +3,60 @@ package com.dyn.schematics.proxy;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import com.dyn.schematics.Schematic;
 import com.dyn.schematics.SchematicMod;
+import com.dyn.schematics.block.BlockSchematicClaim;
+import com.dyn.schematics.block.ClaimBlockTileEntity;
+import com.dyn.schematics.network.NetworkManager;
+import com.dyn.schematics.network.messages.MessageBuildSchematicFromTileEntity;
 import com.dyn.schematics.reference.Reference;
 import com.dyn.schematics.registry.SchematicRegistry;
 import com.dyn.schematics.registry.SchematicRenderingRegistry;
 
+import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiYesNo;
 import net.minecraft.client.resources.model.ModelResourceLocation;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.BlockPos;
+import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.IThreadListener;
+import net.minecraft.world.WorldSettings.GameType;
 import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 import net.minecraftforge.fml.common.registry.GameRegistry;
 
 public class Client implements Proxy {
+
+	@Override
+	public void addScheduledTask(Runnable runnable) {
+		Minecraft.getMinecraft().addScheduledTask(runnable);
+	}
+
+	@Override
+	public EntityPlayer getPlayerEntity(MessageContext ctx) {
+		// Note that if you simply return 'Minecraft.getMinecraft().thePlayer',
+		// your packets will not work as expected because you will be getting a
+		// client player even when you are on the server!
+		// Sounds absurd, but it's true.
+
+		// Solution is to double-check side before returning the player:
+		return ctx.side.isClient() ? Minecraft.getMinecraft().thePlayer : ctx.getServerHandler().playerEntity;
+	}
+
+	@Override
+	public IThreadListener getThreadFromContext(MessageContext ctx) {
+		// this causes null pointers in single player...
+		return Minecraft.getMinecraft();
+	}
 
 	@Override
 	public void init() {
@@ -31,10 +67,46 @@ public class Client implements Proxy {
 	public void openSchematicGui(boolean build, BlockPos pos, Schematic schem) {
 		if (build) {
 			Minecraft.getMinecraft().displayGuiScreen(new GuiYesNo((result, id) -> {
-				if (result) {
-					Minecraft.getMinecraft().thePlayer
-							.sendChatMessage(String.format("/buildschematic " + pos.getX() + " " + pos.getY() + " "
-									+ pos.getZ() + " " + SchematicRenderingRegistry.getSchematicRotation(schem)));
+				TileEntity tileentity = Minecraft.getMinecraft().thePlayer.worldObj.getTileEntity(pos);
+				if ((tileentity instanceof ClaimBlockTileEntity)) {
+					if (result) {
+						if(Minecraft.getMinecraft().playerController.getCurrentGameType() == GameType.CREATIVE) {
+							NetworkManager.sendToServer(new MessageBuildSchematicFromTileEntity(pos,
+									SchematicRenderingRegistry.getSchematicRotation(schem),
+									tileentity.getBlockType().getStateFromMeta(tileentity.getBlockMetadata())
+											.getValue(BlockSchematicClaim.FACING)));
+						} else {
+							//check to make sure they have the materials needed to build it
+							Map<Block, Integer> materials = ((ClaimBlockTileEntity) tileentity).getSchematic().getRequiredMaterials();
+							
+							InventoryPlayer inventory = new InventoryPlayer(null);
+							inventory.copyInventory(Minecraft.getMinecraft().thePlayer.inventory);
+							
+							for(Entry<Block, Integer> material : materials.entrySet()) {
+								int total = material.getValue();
+								if(!inventory.hasItem(Item.getItemFromBlock(material.getKey()))) {
+									Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText("You do not have the materials necessary to build this schematic, missing: " + material.getKey().getLocalizedName()));
+									Minecraft.getMinecraft().displayGuiScreen(null);
+									return;
+								}
+								if(total != inventory.clearMatchingItems(Item.getItemFromBlock(material.getKey()), -1, material.getValue(), null)) {
+									Minecraft.getMinecraft().thePlayer.addChatMessage(new ChatComponentText("You do not have enough materials to build this schematic, you need: " + material.getValue() + " "+ material.getKey().getLocalizedName()));
+									Minecraft.getMinecraft().displayGuiScreen(null);
+									return;
+								}
+							}
+							
+							NetworkManager.sendToServer(new MessageBuildSchematicFromTileEntity(pos,
+									SchematicRenderingRegistry.getSchematicRotation(schem),
+									tileentity.getBlockType().getStateFromMeta(tileentity.getBlockMetadata())
+											.getValue(BlockSchematicClaim.FACING)));
+						}
+						
+					}
+					((ClaimBlockTileEntity) tileentity).setActive(false);
+					Minecraft.getMinecraft().addScheduledTask(() -> {
+						SchematicRenderingRegistry.removeSchematic(((ClaimBlockTileEntity) tileentity).getSchematic());
+					});
 				}
 				Minecraft.getMinecraft().displayGuiScreen(null);
 			}, "Build Schematic", "Would you like to build this schematic?", 1));
