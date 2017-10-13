@@ -61,7 +61,7 @@ minecraft {
 }
 
 dependencies {
-//	compile 'com.github.CityOfLearning:rabbit-gui:DYN-CityServer-SNAPSHOT'
+
 }
 
 processResources
