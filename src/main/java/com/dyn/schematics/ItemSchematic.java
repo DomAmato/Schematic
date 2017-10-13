@@ -6,24 +6,29 @@ import java.util.Map.Entry;
 
 import javax.annotation.Nullable;
 
+import com.dyn.schematics.block.BlockSchematicClaim;
+import com.dyn.schematics.block.BlockSchematicClaimStand;
+import com.dyn.schematics.block.ClaimBlockTileEntity;
 import com.dyn.schematics.reference.Reference;
 import com.dyn.schematics.registry.SchematicRegistry;
-import com.dyn.schematics.registry.SchematicRenderingRegistry;
 
 import net.minecraft.block.Block;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.text.TextFormatting;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.NonNullList;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
@@ -42,14 +47,13 @@ public class ItemSchematic extends Item {
 	public ItemSchematic() {
 		maxStackSize = 1;
 		setHasSubtypes(true);
-		setRegistryName(Reference.MOD_ID, "schematic");
 		setUnlocalizedName("schematic");
-		setCreativeTab(CreativeTabs.DECORATIONS);
+		setRegistryName(Reference.MOD_ID, "schematic");
+		setCreativeTab(SchematicMod.schemTab);
 	}
 
 	/**
-	 * allows items to add custom lines of information to the mouseover
-	 * description
+	 * allows items to add custom lines of information to the mouseover description
 	 */
 	@Override
 	@SideOnly(Side.CLIENT)
@@ -64,24 +68,24 @@ public class ItemSchematic extends Item {
 
 			Map<Block, Integer> materials = schem.getRequiredMaterials();
 
-			tooltip.add(TextFormatting.DARK_AQUA + schemName + TextFormatting.RESET + " ("
-					+ TextFormatting.GRAY + schem.getTotalMaterialCost(materials) + TextFormatting.RESET + ")");
+			tooltip.add(TextFormatting.DARK_AQUA + schemName + TextFormatting.RESET + " (" + TextFormatting.GRAY
+					+ schem.getTotalMaterialCost(materials) + TextFormatting.RESET + ")");
 			tooltip.add("");
 			for (Entry<Block, Integer> block : materials.entrySet()) {
 				if (counter > 5) {
 					tooltip.add("Etc...");
 					break;
 				}
-				tooltip.add(TextFormatting.GOLD + block.getKey().getLocalizedName() + TextFormatting.RESET
-						+ ": " + TextFormatting.GRAY + block.getValue());
+				tooltip.add(TextFormatting.GOLD + block.getKey().getLocalizedName() + TextFormatting.RESET + ": "
+						+ TextFormatting.GRAY + block.getValue());
 				counter++;
 			}
 		}
 	}
 
 	/**
-	 * returns a list of items with the same ID, but different meta (eg: dye
-	 * returns 16 items)
+	 * returns a list of items with the same ID, but different meta (eg: dye returns
+	 * 16 items)
 	 */
 	@Override
 	@SideOnly(Side.CLIENT)
@@ -120,62 +124,139 @@ public class ItemSchematic extends Item {
 	@Override
 	public boolean onBlockStartBreak(ItemStack stack, BlockPos pos, EntityPlayer player) {
 		if (player.world.isRemote) {
-			if (stack.hasTagCompound()) {
-				Schematic schem = new Schematic(stack.getDisplayName(), stack.getTagCompound());
-				if (SchematicRenderingRegistry.containsCompiledSchematic(schem, pos)) {
-					SchematicMod.proxy.openSchematicGui(true, pos, schem);
-				}
-			} else if (!SchematicMod.startPos.equals(BlockPos.ORIGIN) && !SchematicMod.endPos.equals(BlockPos.ORIGIN)) {
+			if (!stack.hasTagCompound() && !SchematicMod.startPos.equals(BlockPos.ORIGIN)
+					&& !SchematicMod.endPos.equals(BlockPos.ORIGIN)) {
 				SchematicMod.proxy.openSchematicGui(false, pos, null);
+				return true;
 			}
 
 		}
-		return true;
+		return false;
 	}
 
 	/**
-	 * Called whenever this item is equipped and the right mouse button is
-	 * pressed. Args: itemStack, world, entityPlayer
+	 * Called whenever this item is equipped and the right mouse button is pressed.
+	 * Args: itemStack, world, entityPlayer
 	 */
 	@Override
-	public ActionResult<ItemStack> onItemRightClick(World worldIn, EntityPlayer playerIn, EnumHand handIn)
-    {
+	public ActionResult<ItemStack> onItemRightClick(World worldIn, EntityPlayer playerIn, EnumHand handIn) {
 		if (worldIn.isRemote) {
-			if (playerIn.getHeldItem(handIn).hasTagCompound()) {
-				SchematicRenderingRegistry
-						.removeSchematic(new Schematic(playerIn.getHeldItem(handIn).getDisplayName(), playerIn.getHeldItem(handIn).getTagCompound()));
-			} else {
+			if (!playerIn.getHeldItem(handIn).hasTagCompound()) {
 				SchematicMod.startPos = BlockPos.ORIGIN;
 				SchematicMod.endPos = BlockPos.ORIGIN;
 			}
 		}
-        return new ActionResult<ItemStack>(EnumActionResult.PASS, playerIn.getHeldItem(handIn));
+		return new ActionResult<>(EnumActionResult.PASS, playerIn.getHeldItem(handIn));
 	}
 
 	/**
 	 * Called when a Block is right-clicked with this Item
 	 */
 	@Override
-    public EnumActionResult onItemUse(EntityPlayer player, World worldIn, BlockPos pos, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ)
- {
-		if (worldIn.isRemote) {
-			if (player.getHeldItem(hand).hasTagCompound()) {
-				Schematic schem = new Schematic(player.getHeldItem(hand).getDisplayName(), player.getHeldItem(hand).getTagCompound());
-				if (SchematicRenderingRegistry.containsCompiledSchematic(schem, pos)) {
-					SchematicRenderingRegistry.rotateSchematic(schem);
-				} else {
-					SchematicRenderingRegistry.addSchematic(schem, pos, 0);
-				}
-				return EnumActionResult.PASS;
+	public EnumActionResult onItemUse(EntityPlayer playerIn, World worldIn, BlockPos pos, EnumHand hand,
+			EnumFacing side, float hitX, float hitY, float hitZ) {
+		ItemStack stack = playerIn.getHeldItem(hand);
+		if (stack.hasTagCompound()) {
+			pos = pos.offset(side);
+
+			if (!playerIn.canPlayerEdit(pos, side, stack)) {
+				return EnumActionResult.FAIL;
+			} else if (worldIn.isRemote) {
+				return EnumActionResult.SUCCESS;
 			} else {
-				if (SchematicMod.startPos != BlockPos.ORIGIN) {
-					SchematicMod.endPos = pos;
+				if ((side == EnumFacing.UP) || (side == EnumFacing.DOWN)) {
+					MathHelper.floor((((playerIn.rotationYaw + 180.0F) * 16.0F) / 360.0F) + 0.5D);
+					worldIn.setBlockState(pos,
+							SchematicMod.schematicBlockStand.getDefaultState()
+									.withProperty(BlockSchematicClaim.FACING,
+											playerIn.getHorizontalFacing().getOpposite())
+									.withProperty(BlockSchematicClaimStand.CEILING, side == EnumFacing.DOWN),
+							3);
 				} else {
-					SchematicMod.startPos = pos;
+					worldIn.setBlockState(pos, SchematicMod.schematicBlockWall.getDefaultState()
+							.withProperty(BlockSchematicClaim.FACING, side), 3);
 				}
+
+				stack.shrink(1);
+				TileEntity tileentity = worldIn.getTileEntity(pos);
+
+				if ((tileentity instanceof ClaimBlockTileEntity)
+						&& !ItemBlock.setTileEntityNBT(worldIn, playerIn, pos, stack)) {
+					BlockPos schem_pos;
+
+					switch (side) {
+					case EAST:
+						schem_pos = pos;
+						break;
+					case NORTH:
+						schem_pos = pos.south();
+						break;
+					case SOUTH:
+						schem_pos = pos.east();
+						break;
+					case WEST:
+						schem_pos = pos.south().east();
+						break;
+					default:
+						schem_pos = pos;
+						break;
+					case DOWN:
+						schem_pos = pos.up();
+						switch (playerIn.getHorizontalFacing()) {
+						case EAST:
+							schem_pos = pos.up().south().east();
+							break;
+						case NORTH:
+							schem_pos = pos.up().east();
+							break;
+						case SOUTH:
+							schem_pos = pos.up().south();
+							break;
+						case WEST:
+							schem_pos = pos.up();
+							break;
+						default:
+							schem_pos = pos;
+							break;
+
+						}
+						break;
+					case UP:
+						switch (playerIn.getHorizontalFacing()) {
+						case EAST:
+							schem_pos = pos.down().south().east();
+							break;
+						case NORTH:
+							schem_pos = pos.down().east();
+							break;
+						case SOUTH:
+							schem_pos = pos.down().south();
+							break;
+						case WEST:
+							schem_pos = pos.down();
+							break;
+						default:
+							schem_pos = pos;
+							break;
+						}
+						break;
+
+					}
+					Schematic schem = new Schematic(stack.getTagCompound().getString("title") + schem_pos.toLong(),
+							stack.getTagCompound());
+					((ClaimBlockTileEntity) tileentity).setSchematic(schem, schem_pos);
+				}
+
+				return EnumActionResult.SUCCESS;
+			}
+		} else if (worldIn.isRemote) {
+			if (SchematicMod.startPos != BlockPos.ORIGIN) {
+				SchematicMod.endPos = pos;
+			} else {
+				SchematicMod.startPos = pos;
 			}
 		}
-
-		return EnumActionResult.PASS;
+		return EnumActionResult.SUCCESS;
 	}
+
 }
