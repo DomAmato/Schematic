@@ -18,12 +18,12 @@ public class SchematicRegistry {
 	private static List<File> schematicLocations = Lists.newArrayList();
 
 	public static void addSchematicLocation(File loc) {
-		schematicLocations.add(loc);
+		SchematicRegistry.schematicLocations.add(loc);
 	}
 
 	public static List<String> enumerateSchematics() {
 		List<String> schematics = Lists.newArrayList();
-		for (File location : schematicLocations) {
+		for (File location : SchematicRegistry.schematicLocations) {
 			for (File schem : location.listFiles((FilenameFilter) (dir, name) -> name.endsWith("schematic"))) {
 				schematics.add(schem.getName().replace(".schematic", ""));
 			}
@@ -32,12 +32,12 @@ public class SchematicRegistry {
 	}
 
 	public static List<File> getSchematicLocations() {
-		return schematicLocations;
+		return SchematicRegistry.schematicLocations;
 	}
 
 	public static Schematic load(String name) {
 		InputStream stream = null;
-		for (File location : schematicLocations) {
+		for (File location : SchematicRegistry.schematicLocations) {
 			try {
 				stream = new FileInputStream(new File(location, name + ".schematic"));
 			} catch (FileNotFoundException e2) {

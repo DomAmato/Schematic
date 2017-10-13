@@ -25,16 +25,6 @@ public class CommandLoadSchematic extends CommandBase {
 	}
 
 	@Override
-	public String getName() {
-		return "loadschematic";
-	}
-
-	@Override
-	public String getUsage(ICommandSender sender) {
-		return "/loadschematic <name>";
-	}
-
-	@Override
 	public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
 		if (args.length < 1) {
 			throw new CommandException("Must specify name to load", new Object[0]);
@@ -55,5 +45,15 @@ public class CommandLoadSchematic extends CommandBase {
 		} else {
 			throw new CommandException("Could not find schematic %s", new Object[] { args[0] });
 		}
+	}
+
+	@Override
+	public String getName() {
+		return "loadschematic";
+	}
+
+	@Override
+	public String getUsage(ICommandSender sender) {
+		return "/loadschematic <name>";
 	}
 }
