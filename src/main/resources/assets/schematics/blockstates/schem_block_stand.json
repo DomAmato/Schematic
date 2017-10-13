@@ -1,0 +1,12 @@
+{
+    "variants": {
+         "ceiling=false,facing=north": { "model": "schematics:schem_block_stand", "y": 180},
+        "ceiling=false,facing=south": { "model": "schematics:schem_block_stand" },
+        "ceiling=false,facing=west":  { "model": "schematics:schem_block_stand", "y": 90 },
+        "ceiling=false,facing=east":  { "model": "schematics:schem_block_stand", "y": 270 },
+         "ceiling=true,facing=north": { "model": "schematics:schem_block_stand", "x": 180},
+        "ceiling=true,facing=south": { "model": "schematics:schem_block_stand", "x": 180, "y": 180},
+        "ceiling=true,facing=west":  { "model": "schematics:schem_block_stand", "x": 180, "y": 270 },
+        "ceiling=true,facing=east":  { "model": "schematics:schem_block_stand", "x": 180, "y": 90 }
+    }
+}
