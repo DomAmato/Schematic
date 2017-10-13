@@ -15,6 +15,7 @@ import com.dyn.schematics.renderer.SchematicRenderer;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GLAllocation;
 import net.minecraft.client.renderer.GlStateManager;
@@ -22,78 +23,107 @@ import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.fml.client.FMLClientHandler;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 public class SchematicRenderingRegistry {
-	private static Map<String, Triple<Schematic, BlockPos, Integer>> compiledSchematics = Maps.newHashMap();
+	private static Map<String, Triple<Schematic, BlockPos, Pair<EnumFacing, Integer>>> compiledSchematics = Maps
+			.newHashMap();
 	private static Map<Schematic, Pair<Integer, BlockPos>> compiledDisplayListId = Maps.newHashMap();
-	private static List<Triple<Schematic, BlockPos, Integer>> toCompile = Lists.newArrayList();
+	private static List<Triple<Schematic, BlockPos, Pair<EnumFacing, Integer>>> toCompile = Lists.newArrayList();
 
-	public static void addSchematic(Schematic schematic, BlockPos offset, int rotation) {
+	public static void addSchematic(Schematic schematic, BlockPos offset, EnumFacing face, int rotation) {
 		if (schematic.getSize() < 100000) {
-			if (compiledSchematics.containsKey(schematic.getName())) {
+			if (SchematicRenderingRegistry.compiledSchematics.containsKey(schematic.getName())) {
 				// if we already compiled this schematic with the same offset
 				// and rotation dont add it again
-				if ((compiledSchematics.get(schematic.getName()).getMiddle() != offset)
-						|| (compiledSchematics.get(schematic.getName()).getRight() != rotation)) {
-					toCompile.add(new ImmutableTriple<>(schematic, offset, rotation));
+				if ((SchematicRenderingRegistry.compiledSchematics.get(schematic.getName()).getMiddle() != offset)
+						|| (SchematicRenderingRegistry.compiledSchematics.get(schematic.getName()).getRight()
+								.getLeft() != face)
+						|| (SchematicRenderingRegistry.compiledSchematics.get(schematic.getName()).getRight()
+								.getRight() != rotation)) {
+					SchematicRenderingRegistry.toCompile
+							.add(new ImmutableTriple<>(schematic, offset, new ImmutablePair<>(face, rotation)));
 					// delete the display list associated with the schematic
-					GLAllocation.deleteDisplayLists(
-							compiledDisplayListId.get(compiledSchematics.get(schematic.getName()).getLeft()).getLeft());
-					compiledSchematics.remove(schematic.getName());
+					Minecraft.getMinecraft().addScheduledTask(() -> {
+						GLAllocation.deleteDisplayLists(SchematicRenderingRegistry.compiledDisplayListId
+								.get(SchematicRenderingRegistry.compiledSchematics.get(schematic.getName()).getLeft())
+								.getLeft());
+						SchematicRenderingRegistry.compiledSchematics.remove(schematic.getName());
+					});
+
 				}
 			} else {
-				toCompile.add(new ImmutableTriple<>(schematic, offset, rotation));
+				if (schematic.getSize() > 0) {
+					SchematicRenderingRegistry.toCompile
+							.add(new ImmutableTriple<>(schematic, offset, new ImmutablePair<>(face, rotation)));
+				}
 			}
 		}
 	}
 
 	public static boolean containsCompiledSchematic(Schematic schematic) {
-		return compiledSchematics.containsKey(schematic.getName());
+		return SchematicRenderingRegistry.compiledSchematics.containsKey(schematic.getName());
 	}
 
 	public static boolean containsCompiledSchematic(Schematic schematic, BlockPos pos) {
-		if (compiledSchematics.containsKey(schematic.getName())) {
-			return compiledSchematics.get(schematic.getName()).getMiddle().equals(pos);
+		if (SchematicRenderingRegistry.compiledSchematics.containsKey(schematic.getName())) {
+			return SchematicRenderingRegistry.compiledSchematics.get(schematic.getName()).getMiddle().equals(pos);
 		}
 		return false;
 	}
 
-	public static boolean containsCompiledSchematic(Schematic schematic, BlockPos pos, int rotation) {
-		if (compiledSchematics.containsKey(schematic.getName())) {
-			return compiledSchematics.get(schematic.getName()).getMiddle().equals(pos)
-					&& (compiledSchematics.get(schematic.getName()).getRight() == rotation);
+	public static boolean containsCompiledSchematic(Schematic schematic, BlockPos pos, EnumFacing face, int rotation) {
+		if (SchematicRenderingRegistry.compiledSchematics.containsKey(schematic.getName())) {
+			return SchematicRenderingRegistry.compiledSchematics.get(schematic.getName()).getMiddle().equals(pos)
+					&& (SchematicRenderingRegistry.compiledSchematics.get(schematic.getName()).getRight()
+							.getLeft() == face)
+					&& (SchematicRenderingRegistry.compiledSchematics.get(schematic.getName()).getRight()
+							.getRight() == rotation);
 		}
 		return false;
 	}
 
 	public static int getSchematicRotation(Schematic schematic) {
-		if (compiledSchematics.containsKey(schematic.getName())) {
-			return compiledSchematics.get(schematic.getName()).getRight();
+		if (SchematicRenderingRegistry.compiledSchematics.containsKey(schematic.getName())) {
+			return SchematicRenderingRegistry.compiledSchematics.get(schematic.getName()).getRight().getRight();
 		}
 		return 0;
 	}
 
 	public static void removeSchematic(Schematic schematic) {
-		if (compiledSchematics.containsKey(schematic.getName())) {
-			GLAllocation.deleteDisplayLists(
-					compiledDisplayListId.get(compiledSchematics.get(schematic.getName()).getLeft()).getLeft());
-			compiledDisplayListId.remove(compiledSchematics.remove(schematic.getName()).getLeft());
+		if (SchematicRenderingRegistry.compiledSchematics.containsKey(schematic.getName())) {
+			Minecraft.getMinecraft().addScheduledTask(() -> {
+				GLAllocation.deleteDisplayLists(SchematicRenderingRegistry.compiledDisplayListId
+						.get(SchematicRenderingRegistry.compiledSchematics.get(schematic.getName()).getLeft())
+						.getLeft());
+				SchematicRenderingRegistry.compiledDisplayListId
+						.remove(SchematicRenderingRegistry.compiledSchematics.remove(schematic.getName()).getLeft());
+			});
+
 		}
 	}
 
 	public static void rotateSchematic(Schematic schematic) {
-		if (compiledSchematics.containsKey(schematic.getName())) {
-			toCompile.add(new ImmutableTriple<>(compiledSchematics.get(schematic.getName()).getLeft(),
-					compiledSchematics.get(schematic.getName()).getMiddle(),
-					(1 + compiledSchematics.get(schematic.getName()).getRight()) % 4));
+		if (SchematicRenderingRegistry.compiledSchematics.containsKey(schematic.getName())) {
+			SchematicRenderingRegistry.toCompile.add(new ImmutableTriple<>(
+					SchematicRenderingRegistry.compiledSchematics.get(schematic.getName()).getLeft(),
+					SchematicRenderingRegistry.compiledSchematics.get(schematic.getName()).getMiddle(),
+					new ImmutablePair<>(
+							SchematicRenderingRegistry.compiledSchematics.get(schematic.getName()).getRight().getLeft(),
+							(1 + SchematicRenderingRegistry.compiledSchematics.get(schematic.getName()).getRight()
+									.getRight()) % 4)));
 			// delete the display list associated with the schematic
-			GLAllocation.deleteDisplayLists(
-					compiledDisplayListId.get(compiledSchematics.get(schematic.getName()).getLeft()).getLeft());
-			compiledSchematics.remove(schematic.getName());
+			Minecraft.getMinecraft().addScheduledTask(() -> {
+				GLAllocation.deleteDisplayLists(SchematicRenderingRegistry.compiledDisplayListId
+						.get(SchematicRenderingRegistry.compiledSchematics.get(schematic.getName()).getLeft())
+						.getLeft());
+				SchematicRenderingRegistry.compiledSchematics.remove(schematic.getName());
+			});
+
 		}
 	}
 
@@ -102,19 +132,21 @@ public class SchematicRenderingRegistry {
 
 		renderSchematicSelection();
 
-		for (Pair<Integer, BlockPos> compiledSchem : compiledDisplayListId.values()) {
+		for (Pair<Integer, BlockPos> compiledSchem : SchematicRenderingRegistry.compiledDisplayListId.values()) {
 			SchematicRenderer.renderCompiledSchematic(compiledSchem.getLeft(), compiledSchem.getRight());
 		}
-		List<Triple<Schematic, BlockPos, Integer>> remove = Lists.newArrayList();
-		for (Triple<Schematic, BlockPos, Integer> schem : toCompile) {
-			int id = SchematicRenderer.compileSchematic(schem.getLeft(), schem.getMiddle(), schem.getRight());
+		List<Triple<Schematic, BlockPos, Pair<EnumFacing, Integer>>> remove = Lists.newArrayList();
+		for (Triple<Schematic, BlockPos, Pair<EnumFacing, Integer>> schem : SchematicRenderingRegistry.toCompile) {
+			int id = SchematicRenderer.compileSchematic(schem.getLeft(), schem.getMiddle(), schem.getRight().getLeft(),
+					schem.getRight().getRight());
 			if (id > 0) {
-				compiledSchematics.put(schem.getLeft().getName(), schem);
-				compiledDisplayListId.put(schem.getLeft(), new ImmutablePair<>(id, schem.getMiddle()));
+				SchematicRenderingRegistry.compiledSchematics.put(schem.getLeft().getName(), schem);
+				SchematicRenderingRegistry.compiledDisplayListId.put(schem.getLeft(),
+						new ImmutablePair<>(id, schem.getMiddle()));
 				remove.add(schem);
 			}
 		}
-		toCompile.removeAll(remove);
+		SchematicRenderingRegistry.toCompile.removeAll(remove);
 	}
 
 	/**
