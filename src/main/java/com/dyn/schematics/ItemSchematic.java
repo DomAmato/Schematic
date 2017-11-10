@@ -53,7 +53,8 @@ public class ItemSchematic extends Item {
 	}
 
 	/**
-	 * allows items to add custom lines of information to the mouseover description
+	 * allows items to add custom lines of information to the mouseover
+	 * description
 	 */
 	@Override
 	@SideOnly(Side.CLIENT)
@@ -84,25 +85,27 @@ public class ItemSchematic extends Item {
 	}
 
 	/**
-	 * returns a list of items with the same ID, but different meta (eg: dye returns
-	 * 16 items)
+	 * returns a list of items with the same ID, but different meta (eg: dye
+	 * returns 16 items)
 	 */
 	@Override
 	@SideOnly(Side.CLIENT)
 	public void getSubItems(CreativeTabs tab, NonNullList<ItemStack> items) {
-		items.add(new ItemStack(this, 1, 0));
-		for (String schemName : SchematicRegistry.enumerateSchematics()) {
-			Schematic schem = SchematicRegistry.load(schemName);
-			if ((schem != null) && (schem.getSize() < 100000)) {
-				NBTTagCompound compound = new NBTTagCompound();
-				schem.writeToNBT(compound);
-				compound.setString("title", schemName);
+		if (isInCreativeTab(tab)) {
+			items.add(new ItemStack(this, 1, 0));
+			for (String schemName : SchematicRegistry.enumerateSchematics()) {
+				Schematic schem = SchematicRegistry.load(schemName);
+				if ((schem != null) && (schem.getSize() < 100000)) {
+					NBTTagCompound compound = new NBTTagCompound();
+					schem.writeToNBT(compound);
+					compound.setString("title", schemName);
 
-				ItemStack is = new ItemStack(this);
-				is.setTagCompound(compound);
+					ItemStack is = new ItemStack(this);
+					is.setTagCompound(compound);
 
-				items.add(is);
+					items.add(is);
 
+				}
 			}
 		}
 	}
@@ -135,8 +138,8 @@ public class ItemSchematic extends Item {
 	}
 
 	/**
-	 * Called whenever this item is equipped and the right mouse button is pressed.
-	 * Args: itemStack, world, entityPlayer
+	 * Called whenever this item is equipped and the right mouse button is
+	 * pressed. Args: itemStack, world, entityPlayer
 	 */
 	@Override
 	public ActionResult<ItemStack> onItemRightClick(World worldIn, EntityPlayer playerIn, EnumHand handIn) {

@@ -79,7 +79,8 @@ public class Client implements Proxy {
 									tileentity.getBlockType().getStateFromMeta(tileentity.getBlockMetadata())
 											.getValue(BlockSchematicClaim.FACING)));
 						} else {
-							// check to make sure they have the materials needed to build it
+							// check to make sure they have the materials needed
+							// to build it
 							Map<Block, Integer> materials = ((ClaimBlockTileEntity) tileentity).getSchematic()
 									.getRequiredMaterials();
 

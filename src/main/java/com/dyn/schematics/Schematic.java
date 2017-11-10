@@ -84,7 +84,8 @@ public class Schematic {
 			return;
 		}
 
-		// the translation values are length for E/W and width for N/S on E/W sides
+		// the translation values are length for E/W and width for N/S on E/W
+		// sides
 		// and the inverse for the N/S sides
 		switch (facing) {
 		case EAST:

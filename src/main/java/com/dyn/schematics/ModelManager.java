@@ -60,10 +60,11 @@ public class ModelManager {
 	}
 
 	/**
-	 * Register a model for a metadata value of the {@link Block}'s {@link Item}.
+	 * Register a model for a metadata value of the {@link Block}'s
+	 * {@link Item}.
 	 * <p>
-	 * Uses the registry name as the domain/path and the {@link IBlockState} as the
-	 * variant.
+	 * Uses the registry name as the domain/path and the {@link IBlockState} as
+	 * the variant.
 	 *
 	 * @param state
 	 *            The state to use as the variant
@@ -93,8 +94,10 @@ public class ModelManager {
 		registerVariantBlockItemModels(SchematicMod.schematicBlockWall.getDefaultState(), BlockSchematicClaim.FACING,
 				EnumFacing::getIndex);
 
-		// registerBlockItemModelForMeta(RobotMod.robot_block.getDefaultState(), 0);
-		// registerBlockItemModelForMeta(RobotMod.robot_magent.getDefaultState(), 0);
+		// registerBlockItemModelForMeta(RobotMod.robot_block.getDefaultState(),
+		// 0);
+		// registerBlockItemModelForMeta(RobotMod.robot_magent.getDefaultState(),
+		// 0);
 
 	}
 
@@ -122,16 +125,17 @@ public class ModelManager {
 	 *            The full model location
 	 */
 	private void registerItemModel(final Item item, final ModelResourceLocation fullModelLocation) {
-		ModelBakery.registerItemVariants(item, fullModelLocation); // Ensure the custom model is loaded and prevent the
-																	// default model from being loaded
+		ModelBakery.registerItemVariants(item, fullModelLocation);
+		// Ensure the custom model is loaded and prevent the
+		// default model from being loaded
 		registerItemModel(item, stack -> fullModelLocation);
 	}
 
 	/**
 	 * Register a single model for an {@link Item}.
 	 * <p>
-	 * Uses {@code modelLocation} as the domain/path and {@link "inventory"} as the
-	 * variant.
+	 * Uses {@code modelLocation} as the domain/path and {@link "inventory"} as
+	 * the variant.
 	 *
 	 * @param item
 	 *            The Item
@@ -151,13 +155,13 @@ public class ModelManager {
 	}
 
 	/**
-	 * Register a model for each metadata value of the {@link Block}'s {@link Item}
-	 * corresponding to the values of an {@link IProperty}.
+	 * Register a model for each metadata value of the {@link Block}'s
+	 * {@link Item} corresponding to the values of an {@link IProperty}.
 	 * <p>
 	 * For each value:
 	 * <li>The domain/path is the registry name</li>
-	 * <li>The variant is {@code baseState} with the {@link IProperty} set to the
-	 * value</li>
+	 * <li>The variant is {@code baseState} with the {@link IProperty} set to
+	 * the value</li>
 	 * <p>
 	 * The {@code getMeta} function is used to get the metadata of each value.
 	 *

@@ -27,8 +27,8 @@ public class Server implements Proxy {
 	}
 
 	/**
-	 * Returns the current thread based on side during message handling, used for
-	 * ensuring that the message is being handled by the main thread
+	 * Returns the current thread based on side during message handling, used
+	 * for ensuring that the message is being handled by the main thread
 	 */
 	@Override
 	public IThreadListener getThreadFromContext(MessageContext ctx) {
