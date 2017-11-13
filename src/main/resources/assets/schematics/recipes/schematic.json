@@ -1,0 +1,23 @@
+{
+	"type": "minecraft:crafting_shaped",
+	"pattern": [
+		"PDP",
+		"DPD",
+		"PDP"
+	],
+	"key": {
+		"P": {
+			"item": "minecraft:paper",
+      		"data": 0
+		},
+		"D": {
+			"item": "minecraft:dye",
+      		"data": 12
+		}
+	},
+	"result": {
+		"item": "schematics:schematic",
+		"data": 0,
+		"count": 1
+	}
+}

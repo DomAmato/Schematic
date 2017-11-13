@@ -1,2 +1,4 @@
-item.schematic.name=Schematic
+item.schematic_0.name=Schematic
+item.schematic_1.name=Schematic
 itemGroup.schems=Schematics Tab
+tile.architect_desk.name=Architects Desk
