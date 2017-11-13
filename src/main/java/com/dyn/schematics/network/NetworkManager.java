@@ -1,6 +1,7 @@
 package com.dyn.schematics.network;
 
 import com.dyn.schematics.network.messages.MessageBuildSchematicFromTileEntity;
+import com.dyn.schematics.network.messages.MessageUpdateSchematicNBT;
 import com.dyn.schematics.reference.Reference;
 
 import net.minecraft.entity.player.EntityPlayer;
@@ -38,9 +39,9 @@ public class NetworkManager {
 	private static byte packetId = 0;
 
 	/**
-	 * The SimpleNetworkWrapper instance is used both to register and send
-	 * packets. Since I will be adding wrapper methods, this field is private,
-	 * but you should make it public if you plan on using it directly.
+	 * The SimpleNetworkWrapper instance is used both to register and send packets.
+	 * Since I will be adding wrapper methods, this field is private, but you should
+	 * make it public if you plan on using it directly.
 	 */
 	private static SimpleNetworkWrapper dispatcher = NetworkRegistry.INSTANCE.newSimpleChannel(Reference.MOD_ID);
 
@@ -56,6 +57,8 @@ public class NetworkManager {
 		// Server
 		NetworkManager.registerMessage(MessageBuildSchematicFromTileEntity.class,
 				MessageBuildSchematicFromTileEntity.Handler.class, Side.SERVER);
+		NetworkManager.registerMessage(MessageUpdateSchematicNBT.class, MessageUpdateSchematicNBT.Handler.class,
+				Side.SERVER);
 
 	}
 
@@ -76,8 +79,8 @@ public class NetworkManager {
 	}
 
 	/**
-	 * Sends a message to everyone within a certain range of the player
-	 * provided. Shortcut to
+	 * Sends a message to everyone within a certain range of the player provided.
+	 * Shortcut to
 	 * {@link SimpleNetworkWrapper#sendToAllAround(IMessage, NetworkRegistry.TargetPoint)}
 	 */
 	public static void sendToAllAround(IMessage message, EntityPlayer player, double range) {
@@ -86,8 +89,8 @@ public class NetworkManager {
 	}
 
 	/**
-	 * Sends a message to everyone within a certain range of the coordinates in
-	 * the same dimension. Shortcut to
+	 * Sends a message to everyone within a certain range of the coordinates in the
+	 * same dimension. Shortcut to
 	 * {@link SimpleNetworkWrapper#sendToAllAround(IMessage, NetworkRegistry.TargetPoint)}
 	 */
 	public static void sendToAllAround(IMessage message, int dimension, double x, double y, double z, double range) {

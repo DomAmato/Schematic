@@ -1,0 +1,30 @@
+{
+    "parent": "schematics:block/architect_desk",
+    "display": {
+    	"ground": {
+            "rotation": [ 0, 0, 0 ],
+            "translation": [ 0, 2, 0],
+            "scale":[ 0.5, 0.5, 0.5 ]
+        },
+    	"gui": {
+            "rotation": [ 200, 200, 180 ],
+        "translation": [ 0.00, -1.25, -0.00 ],
+        "scale": [ 0.65, 0.65, 0.65 ]
+        },
+        "thirdperson_righthand": {
+            "rotation": [ 46, 216, 0 ],
+        "translation": [ 2.25, 3.00, 0.25 ],
+        "scale": [ 0.55, 0.55, 0.40 ]
+        },
+        "thirdperson_lefthand": {
+            "rotation": [ 46, 216, 0 ],
+        "translation": [ 2.25, 3.00, 0.25 ],
+        "scale": [ 0.55, 0.55, 0.40 ]
+        },
+        "firstperson_righthand": {
+            "rotation": [ 14, 328, 0 ],
+        "translation": [ 0.10, 2.95, 0.00 ],
+        "scale": [ 0.68, 0.68, 0.68 ]
+        }
+    }
+}

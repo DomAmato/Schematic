@@ -1,0 +1,27 @@
+{
+	"type": "minecraft:crafting_shaped",
+	"pattern": [
+		"LLL",
+		"S S",
+		"P P"
+	],
+	"key": {
+		"P": {
+			"item": "minecraft:planks",
+      		"data": 0
+		},
+		"S": {
+			"item": "minecraft:stick",
+      		"data": 0
+		},
+		"L": {
+			"item": "minecraft:wooden_slab",
+      		"data": 0
+		}
+	},
+	"result": {
+		"item": "schematics:architect_desk",
+		"data": 0,
+		"count": 1
+	}
+}

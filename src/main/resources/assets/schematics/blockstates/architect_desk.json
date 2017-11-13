@@ -1,0 +1,8 @@
+{
+    "variants": {
+        "facing=north": { "model": "schematics:architect_desk", "y": 180},
+        "facing=south": { "model": "schematics:architect_desk" },
+        "facing=west":  { "model": "schematics:architect_desk", "y": 90 },
+        "facing=east":  { "model": "schematics:architect_desk", "y": 270 }
+    }
+}

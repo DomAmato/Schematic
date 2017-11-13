@@ -2,11 +2,14 @@ package com.dyn.schematics;
 
 import org.apache.logging.log4j.Logger;
 
+import com.dyn.schematics.block.BlockArchitectDesk;
 import com.dyn.schematics.block.BlockSchematicClaimStand;
 import com.dyn.schematics.block.BlockSchematicClaimWall;
 import com.dyn.schematics.commands.CommandBuildSchematic;
 import com.dyn.schematics.commands.CommandLoadSchematic;
 import com.dyn.schematics.commands.CommandSaveSchematic;
+import com.dyn.schematics.gui.GuiHandler;
+import com.dyn.schematics.item.ItemSchematic;
 import com.dyn.schematics.network.NetworkManager;
 import com.dyn.schematics.proxy.Proxy;
 import com.dyn.schematics.reference.Reference;
@@ -19,6 +22,7 @@ import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
+import net.minecraftforge.fml.common.network.NetworkRegistry;
 
 @Mod(modid = Reference.MOD_ID, name = Reference.MOD_NAME, version = Reference.VERSION)
 public class SchematicMod {
@@ -37,6 +41,7 @@ public class SchematicMod {
 
 	public static final Block schematicBlockStand = new BlockSchematicClaimStand();
 	public static final Block schematicBlockWall = new BlockSchematicClaimWall();
+	public static final BlockArchitectDesk desk = new BlockArchitectDesk();
 
 	public static BlockPos startPos = BlockPos.ORIGIN;
 
@@ -45,6 +50,7 @@ public class SchematicMod {
 	@Mod.EventHandler
 	public void init(FMLInitializationEvent event) {
 		SchematicMod.proxy.init();
+		NetworkRegistry.INSTANCE.registerGuiHandler(this, new GuiHandler());
 	}
 
 	@Mod.EventHandler
