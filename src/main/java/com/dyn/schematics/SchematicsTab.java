@@ -2,6 +2,7 @@ package com.dyn.schematics;
 
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
 
 public class SchematicsTab extends CreativeTabs {
 
@@ -11,7 +12,12 @@ public class SchematicsTab extends CreativeTabs {
 
 	@Override
 	public ItemStack getTabIconItem() {
-		return new ItemStack(SchematicMod.schematic);
+		NBTTagCompound compound = new NBTTagCompound();
+		compound.setString("title", "placeholder");
+
+		ItemStack is = new ItemStack(SchematicMod.schematic);
+		is.setTagCompound(compound);
+		return is;
 	}
 
 }
