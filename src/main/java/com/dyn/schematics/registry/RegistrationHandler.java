@@ -1,5 +1,6 @@
-package com.dyn.schematics;
+package com.dyn.schematics.registry;
 
+import com.dyn.schematics.SchematicMod;
 import com.dyn.schematics.block.ClaimBlockTileEntity;
 import com.dyn.schematics.reference.Reference;
 
@@ -16,12 +17,14 @@ public class RegistrationHandler {
 	public static void registerBlocks(final RegistryEvent.Register<Block> event) {
 		event.getRegistry().register(SchematicMod.schematicBlockStand);
 		event.getRegistry().register(SchematicMod.schematicBlockWall);
+		event.getRegistry().register(SchematicMod.desk);
 		RegistrationHandler.registerTileEntities();
 	}
 
 	@SubscribeEvent
 	public static void registerItems(final RegistryEvent.Register<Item> event) {
 		event.getRegistry().register(SchematicMod.schematic);
+		event.getRegistry().register(SchematicMod.desk.getItemBlock());
 	}
 
 	private static void registerTileEntities() {

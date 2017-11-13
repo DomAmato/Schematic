@@ -1,7 +1,7 @@
 package com.dyn.schematics.commands;
 
-import com.dyn.schematics.ItemSchematic;
 import com.dyn.schematics.Schematic;
+import com.dyn.schematics.item.ItemSchematic;
 import com.dyn.schematics.registry.SchematicRegistry;
 
 import net.minecraft.command.CommandBase;

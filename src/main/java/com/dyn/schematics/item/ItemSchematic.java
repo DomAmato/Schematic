@@ -1,4 +1,4 @@
-package com.dyn.schematics;
+package com.dyn.schematics.item;
 
 import java.util.List;
 import java.util.Map;
@@ -6,6 +6,8 @@ import java.util.Map.Entry;
 
 import javax.annotation.Nullable;
 
+import com.dyn.schematics.Schematic;
+import com.dyn.schematics.SchematicMod;
 import com.dyn.schematics.block.BlockSchematicClaim;
 import com.dyn.schematics.block.BlockSchematicClaimStand;
 import com.dyn.schematics.block.ClaimBlockTileEntity;
@@ -53,8 +55,7 @@ public class ItemSchematic extends Item {
 	}
 
 	/**
-	 * allows items to add custom lines of information to the mouseover
-	 * description
+	 * allows items to add custom lines of information to the mouseover description
 	 */
 	@Override
 	@SideOnly(Side.CLIENT)
@@ -69,9 +70,6 @@ public class ItemSchematic extends Item {
 
 			Map<Block, Integer> materials = schem.getRequiredMaterials();
 
-			tooltip.add(TextFormatting.DARK_AQUA + schemName + TextFormatting.RESET + " (" + TextFormatting.GRAY
-					+ schem.getTotalMaterialCost(materials) + TextFormatting.RESET + ")");
-			tooltip.add("");
 			for (Entry<Block, Integer> block : materials.entrySet()) {
 				if (counter > 5) {
 					tooltip.add("Etc...");
@@ -84,9 +82,41 @@ public class ItemSchematic extends Item {
 		}
 	}
 
+	@Override
+	public String getItemStackDisplayName(ItemStack stack) {
+		if (stack.hasTagCompound()) {
+			NBTTagCompound nbttagcompound = stack.getTagCompound();
+
+			String schemName = nbttagcompound.getString("title");
+
+			Schematic schem = new Schematic(schemName, nbttagcompound);
+
+			Map<Block, Integer> materials = schem.getRequiredMaterials();
+
+			return schemName + TextFormatting.RESET + " ("
+					+ (schem.getTotalMaterialCost(materials) <= 500 ? TextFormatting.DARK_GREEN
+							: schem.getTotalMaterialCost(materials) <= 1500 ? TextFormatting.YELLOW
+									: TextFormatting.RED)
+					+ schem.getTotalMaterialCost(materials) + TextFormatting.RESET + ")";
+		}
+		return super.getItemStackDisplayName(stack);
+	}
+
 	/**
-	 * returns a list of items with the same ID, but different meta (eg: dye
-	 * returns 16 items)
+	 * This used to be 'display damage' but its really just 'aux' data in the
+	 * ItemStack, usually shares the same variable as damage.
+	 * 
+	 * @param stack
+	 * @return
+	 */
+	@Override
+	public int getMetadata(ItemStack stack) {
+		return (stack.hasTagCompound() ? 1 : 0);
+	}
+
+	/**
+	 * returns a list of items with the same ID, but different meta (eg: dye returns
+	 * 16 items)
 	 */
 	@Override
 	@SideOnly(Side.CLIENT)
@@ -108,6 +138,11 @@ public class ItemSchematic extends Item {
 				}
 			}
 		}
+	}
+
+	@Override
+	public String getUnlocalizedName(ItemStack stack) {
+		return super.getUnlocalizedName() + "_" + getMetadata(stack);
 	}
 
 	/**
@@ -138,8 +173,8 @@ public class ItemSchematic extends Item {
 	}
 
 	/**
-	 * Called whenever this item is equipped and the right mouse button is
-	 * pressed. Args: itemStack, world, entityPlayer
+	 * Called whenever this item is equipped and the right mouse button is pressed.
+	 * Args: itemStack, world, entityPlayer
 	 */
 	@Override
 	public ActionResult<ItemStack> onItemRightClick(World worldIn, EntityPlayer playerIn, EnumHand handIn) {
@@ -261,5 +296,4 @@ public class ItemSchematic extends Item {
 		}
 		return EnumActionResult.SUCCESS;
 	}
-
 }

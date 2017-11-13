@@ -95,8 +95,8 @@ public class BlockSchematicClaim extends Block implements ITileEntityProvider {
 	 *
 	 * @param target
 	 *            The full target the player is looking at
-	 * @return A ItemStack to add to the player's inventory, Null if nothing
-	 *         should be added.
+	 * @return A ItemStack to add to the player's inventory, Null if nothing should
+	 *         be added.
 	 */
 	@Override
 	public ItemStack getPickBlock(IBlockState state, RayTraceResult target, World world, BlockPos pos,
@@ -122,8 +122,8 @@ public class BlockSchematicClaim extends Block implements ITileEntityProvider {
 	}
 
 	/**
-	 * Used to determine ambient occlusion and culling when rebuilding chunks
-	 * for render
+	 * Used to determine ambient occlusion and culling when rebuilding chunks for
+	 * render
 	 */
 	@Override
 	public boolean isOpaqueCube(IBlockState state) {

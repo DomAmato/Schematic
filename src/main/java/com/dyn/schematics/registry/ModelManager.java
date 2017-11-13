@@ -1,9 +1,10 @@
-package com.dyn.schematics;
+package com.dyn.schematics.registry;
 
 import java.util.HashSet;
 import java.util.Set;
 import java.util.function.ToIntFunction;
 
+import com.dyn.schematics.SchematicMod;
 import com.dyn.schematics.block.BlockSchematicClaim;
 import com.dyn.schematics.block.BlockSchematicClaimStand;
 import com.dyn.schematics.reference.Reference;
@@ -18,6 +19,7 @@ import net.minecraft.client.renderer.block.statemap.StateMapperBase;
 import net.minecraft.init.Items;
 import net.minecraft.item.Item;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.fluids.Fluid;
@@ -60,11 +62,32 @@ public class ModelManager {
 	}
 
 	/**
-	 * Register a model for a metadata value of the {@link Block}'s
-	 * {@link Item}.
+	 * Register a model for a metadata value of the {@link Block}'s {@link Item}.
 	 * <p>
-	 * Uses the registry name as the domain/path and the {@link IBlockState} as
-	 * the variant.
+	 * Uses the registry name as the domain/path and the {@link IBlockState} as the
+	 * variant.
+	 *
+	 * @param state
+	 *            The state to use as the variant
+	 * @param metadata
+	 *            The item metadata to register the model for
+	 */
+	private void registerBlockItemModel(final IBlockState state) {
+		final Block block = state.getBlock();
+		final Item item = Item.getItemFromBlock(block);
+
+		if (item != Items.AIR) {
+			registerItemModel(item, new ModelResourceLocation(block.getRegistryName(),
+					propertyStringMapper.getPropertyString(state.getProperties())));
+		}
+
+	}
+
+	/**
+	 * Register a model for a metadata value of the {@link Block}'s {@link Item}.
+	 * <p>
+	 * Uses the registry name as the domain/path and the {@link IBlockState} as the
+	 * variant.
 	 *
 	 * @param state
 	 *            The state to use as the variant
@@ -93,12 +116,9 @@ public class ModelManager {
 				BlockSchematicClaimStand.CEILING, false), BlockSchematicClaim.FACING, EnumFacing::getIndex);
 		registerVariantBlockItemModels(SchematicMod.schematicBlockWall.getDefaultState(), BlockSchematicClaim.FACING,
 				EnumFacing::getIndex);
-
-		// registerBlockItemModelForMeta(RobotMod.robot_block.getDefaultState(),
-		// 0);
-		// registerBlockItemModelForMeta(RobotMod.robot_magent.getDefaultState(),
-		// 0);
-
+		// registerItemModel(SchematicMod.desk.getItemBlock(), Reference.MOD_ID +
+		// ":architect_desk");
+		registerBlockItemModel(SchematicMod.desk.getDefaultState());
 	}
 
 	/**
@@ -132,36 +152,30 @@ public class ModelManager {
 	}
 
 	/**
-	 * Register a single model for an {@link Item}.
-	 * <p>
-	 * Uses {@code modelLocation} as the domain/path and {@link "inventory"} as
-	 * the variant.
-	 *
-	 * @param item
-	 *            The Item
-	 * @param modelLocation
-	 *            The model location
-	 */
-	private void registerItemModel(final Item item, final String modelLocation) {
-		final ModelResourceLocation fullModelLocation = new ModelResourceLocation(modelLocation, "inventory");
-		registerItemModel(item, fullModelLocation);
-	}
-
-	/**
 	 * Register this mod's {@link Item} models.
 	 */
 	private void registerItemModels() {
-		registerItemModel(SchematicMod.schematic, Reference.MOD_ID + ":schematic");
+		registerRenderVariants(SchematicMod.schematic, "schematic", 2);
+		// registerItemModel(SchematicMod.schematic, Reference.MOD_ID + ":schematic");
+	}
+
+	public void registerRenderVariants(Item item, String name, int amount) {
+		ResourceLocation[] variants = new ResourceLocation[amount];
+		for (int i = 0; i < amount; i++) {
+			variants[i] = new ResourceLocation(Reference.MOD_ID, name + "_" + i);
+			ModelLoader.setCustomModelResourceLocation(item, i, new ModelResourceLocation(variants[i], "inventory"));
+		}
+		ModelBakery.registerItemVariants(item, variants);
 	}
 
 	/**
-	 * Register a model for each metadata value of the {@link Block}'s
-	 * {@link Item} corresponding to the values of an {@link IProperty}.
+	 * Register a model for each metadata value of the {@link Block}'s {@link Item}
+	 * corresponding to the values of an {@link IProperty}.
 	 * <p>
 	 * For each value:
 	 * <li>The domain/path is the registry name</li>
-	 * <li>The variant is {@code baseState} with the {@link IProperty} set to
-	 * the value</li>
+	 * <li>The variant is {@code baseState} with the {@link IProperty} set to the
+	 * value</li>
 	 * <p>
 	 * The {@code getMeta} function is used to get the metadata of each value.
 	 *
