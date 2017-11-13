@@ -5,6 +5,7 @@ import org.lwjgl.opengl.GL20;
 
 import com.dyn.schematics.Schematic;
 import com.dyn.schematics.SchematicMod;
+import com.dyn.schematics.reference.Reference;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
@@ -21,7 +22,7 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 
 public class SchematicRenderer {
-	private static final ShaderProgram SHADER_ALPHA = new ShaderProgram("rabbit", null, "shaders/alpha.frag");
+	private static final ShaderProgram SHADER_ALPHA = new ShaderProgram(Reference.MOD_ID, null, "shaders/alpha.frag");
 
 	public static int compileSchematic(Schematic schematic, BlockPos offset, EnumFacing face, int schem_rotation) {
 		int retListId = -1;
