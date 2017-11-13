@@ -6,12 +6,11 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.regex.Pattern;
 
-import com.dyn.schematics.ItemSchematic;
+import com.dyn.schematics.item.ItemSchematic;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.block.state.IBlockState;
-import net.minecraft.client.Minecraft;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
@@ -86,7 +85,7 @@ public class CommandSaveSchematic extends CommandBase {
 
 		try {
 			DataOutputStream dataoutputstream = new DataOutputStream(
-					new FileOutputStream(new File(Minecraft.getMinecraft().mcDataDir, "schematics/" + name)));
+					new FileOutputStream(new File(server.getDataDirectory(), "schematics/" + name)));
 			CompressedStreamTools.writeCompressed(nbt, dataoutputstream);
 		} catch (IOException e) {
 			throw new CommandException("Failed writing schematic to file", new Object[0]);
