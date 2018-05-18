@@ -11,6 +11,7 @@ buildscript {
     }
     dependencies {
         classpath 'net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT'
+		classpath "gradle.plugin.com.matthewprenger:CurseGradle:1.0.10"
     }
 }
 
@@ -20,6 +21,7 @@ repositories {
 }
 
 apply plugin: 'net.minecraftforge.gradle.forge'
+apply plugin: 'com.matthewprenger.cursegradle'
 
 version = "1.12.2.${buildNum}"
 
@@ -77,4 +79,13 @@ build.doLast
 	ant.propertyfile(file: "gradle.properties") {
         entry( key: "buildNum", type:"int", default:"0", operation:"+")
     }
+}
+
+curseforge {
+  apiKey = '${api_key}'
+  project {
+    id = '294075'
+    changelog = 'consult the github'
+    releaseType = 'release'
+  }
 }
