@@ -75,8 +75,15 @@ public class ItemSchematic extends Item {
 					tooltip.add("Etc...");
 					break;
 				}
-				tooltip.add(TextFormatting.GOLD + block.getKey().getLocalizedName() + TextFormatting.RESET + ": "
-						+ TextFormatting.GRAY + block.getValue());
+
+				String name = block.getKey().getLocalizedName();
+				if (name.contains(".name")) {
+					ItemStack is = new ItemStack(block.getKey());
+					name = is.getDisplayName();
+				}
+
+				tooltip.add(TextFormatting.GOLD + name + TextFormatting.RESET + ": " + TextFormatting.GRAY
+						+ block.getValue());
 				counter++;
 			}
 		}
@@ -105,7 +112,7 @@ public class ItemSchematic extends Item {
 	/**
 	 * This used to be 'display damage' but its really just 'aux' data in the
 	 * ItemStack, usually shares the same variable as damage.
-	 * 
+	 *
 	 * @param stack
 	 * @return
 	 */
@@ -125,7 +132,7 @@ public class ItemSchematic extends Item {
 			items.add(new ItemStack(this, 1, 0));
 			for (String schemName : SchematicRegistry.enumerateSchematics()) {
 				Schematic schem = SchematicRegistry.load(schemName);
-				if ((schem != null) && (schem.getSize() < 100000)) {
+				if ((schem != null) && (schem.getSize() < SchematicMod.max_size)) {
 					NBTTagCompound compound = new NBTTagCompound();
 					schem.writeToNBT(compound);
 					compound.setString("title", schemName);

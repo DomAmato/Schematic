@@ -4,6 +4,8 @@ import java.io.File;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.lwjgl.input.Keyboard;
+
 import com.dyn.schematics.Schematic;
 import com.dyn.schematics.SchematicMod;
 import com.dyn.schematics.block.BlockSchematicClaim;
@@ -15,7 +17,9 @@ import com.dyn.schematics.registry.SchematicRenderingRegistry;
 
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.GuiChat;
 import net.minecraft.client.gui.GuiYesNo;
+import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.Item;
@@ -25,9 +29,14 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.GameType;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.fml.client.registry.ClientRegistry;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.InputEvent;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
 public class Client implements Proxy {
+
+	private KeyBinding schemKey;
 
 	@Override
 	public void addScheduledTask(Runnable runnable) {
@@ -64,16 +73,35 @@ public class Client implements Proxy {
 	@Override
 	public void init() {
 		MinecraftForge.EVENT_BUS.register(new SchematicRenderingRegistry());
+		MinecraftForge.EVENT_BUS.register(this);
+		schemKey = new KeyBinding("key.toggle.schemui", Keyboard.KEY_U, "key.categories.toggle");
+
+		ClientRegistry.registerKeyBinding(schemKey);
+	}
+
+	@SubscribeEvent
+	public void onKeyInput(InputEvent.KeyInputEvent event) {
+		if ((Minecraft.getMinecraft().currentScreen instanceof GuiChat)) {
+			return;
+		}
+
+		if (schemKey.isPressed()) {
+			if (!Minecraft.getMinecraft().player.getHeldItemMainhand().hasTagCompound()
+					&& !SchematicMod.startPos.equals(BlockPos.ORIGIN) && !SchematicMod.endPos.equals(BlockPos.ORIGIN)) {
+				openSchematicGui(false, null, null);
+			}
+		}
 	}
 
 	@Override
 	public void openSchematicGui(boolean build, BlockPos pos, Schematic schem) {
-		if (build) {
+		if (build && SchematicMod.can_build) {
 			Minecraft.getMinecraft().displayGuiScreen(new GuiYesNo((result, id) -> {
 				TileEntity tileentity = Minecraft.getMinecraft().player.world.getTileEntity(pos);
 				if ((tileentity instanceof ClaimBlockTileEntity)) {
 					if (result) {
-						if (Minecraft.getMinecraft().playerController.getCurrentGameType() == GameType.CREATIVE) {
+						if ((Minecraft.getMinecraft().playerController.getCurrentGameType() == GameType.CREATIVE)
+								|| !SchematicMod.req_resources) {
 							NetworkManager.sendToServer(new MessageBuildSchematicFromTileEntity(pos,
 									SchematicRenderingRegistry.getSchematicRotation(schem),
 									tileentity.getBlockType().getStateFromMeta(tileentity.getBlockMetadata())

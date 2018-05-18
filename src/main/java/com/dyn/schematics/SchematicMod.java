@@ -17,6 +17,7 @@ import com.dyn.schematics.reference.Reference;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
 import net.minecraft.util.math.BlockPos;
+import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
@@ -47,6 +48,28 @@ public class SchematicMod {
 
 	public static BlockPos endPos = BlockPos.ORIGIN;
 
+	private static Configuration configFile;
+
+	public static boolean can_build;
+
+	public static boolean req_resources;
+
+	public static int max_size;
+
+	public static void synchronizeConfig() {
+		SchematicMod.can_build = SchematicMod.configFile.getBoolean("Allow Building", Configuration.CATEGORY_GENERAL,
+				true, "Allow players to build from schematics on the server");
+		SchematicMod.req_resources = SchematicMod.configFile.getBoolean("Require Resources",
+				Configuration.CATEGORY_GENERAL, true,
+				"Building schematics in non-creative mode requires the players to have the necessary ingredients");
+		SchematicMod.max_size = SchematicMod.configFile.getInt("Max Render Size", Configuration.CATEGORY_GENERAL,
+				100000, 100, 500000,
+				"The max number of blocks renderable by a schematic, this drops the framerate when very large schematics are rendered (client only)");
+		if (SchematicMod.configFile.hasChanged()) {
+			SchematicMod.configFile.save();
+		}
+	}
+
 	@Mod.EventHandler
 	public void init(FMLInitializationEvent event) {
 		SchematicMod.proxy.init();
@@ -59,6 +82,10 @@ public class SchematicMod {
 		SchematicMod.proxy.preInit();
 
 		NetworkManager.registerMessages();
+
+		SchematicMod.configFile = new Configuration(event.getSuggestedConfigurationFile());
+		SchematicMod.configFile.load();
+		SchematicMod.synchronizeConfig();
 	}
 
 	@Mod.EventHandler
