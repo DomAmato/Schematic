@@ -43,7 +43,7 @@ public class BlockArchitectDesk extends BlockHorizontal {
 	 */
 	@Override
 	public int getMetaFromState(IBlockState state) {
-		return state.getValue(BlockHorizontal.FACING).getIndex();
+		return state.getValue(BlockHorizontal.FACING).getHorizontalIndex();
 	}
 
 	/**
@@ -61,9 +61,7 @@ public class BlockArchitectDesk extends BlockHorizontal {
 	 */
 	@Override
 	public IBlockState getStateFromMeta(int meta) {
-		EnumFacing enumfacing = EnumFacing.getFront(meta & 7);
-
-		return getDefaultState().withProperty(BlockHorizontal.FACING, enumfacing);
+		return getDefaultState().withProperty(BlockHorizontal.FACING, EnumFacing.getHorizontal(meta));
 	}
 
 	@Override
