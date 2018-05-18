@@ -97,7 +97,7 @@ public class SchematicRenderer {
 				}
 			}
 		} catch (Exception e) {
-			SchematicMod.logger.error("Error preview builder block", e);
+			SchematicMod.logger.error("Error creating render for schematic", e);
 		} finally {
 			GL11.glEndList();
 			if (GL11.glGetError() == 0) {
