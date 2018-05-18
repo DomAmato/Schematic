@@ -21,15 +21,100 @@ import net.minecraft.block.properties.PropertyDirection;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.init.Blocks;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.World;
+import net.minecraftforge.common.util.Constants;
 
 public class Schematic {
+	public static NBTTagCompound generateSchematicNBT(World world, BlockPos bottom, BlockPos top) {
+		NBTTagCompound tagCompound = new NBTTagCompound();
+
+		short width = (short) (1 + Math.abs(bottom.getX() - top.getX()));
+		short height = (short) (1 + Math.abs(bottom.getY() - top.getY()));
+		short length = (short) (1 + Math.abs(bottom.getZ() - top.getZ()));
+
+		tagCompound.setShort("Width", width);
+		tagCompound.setShort("Length", length);
+		tagCompound.setShort("Height", height);
+
+		int size = width * height * length;
+
+		final byte[] localBlocks = new byte[size];
+		final byte[] localMetadata = new byte[size];
+		final byte[] extraBlocks = new byte[size];
+		final byte[] extraBlocksNibble = new byte[(int) Math.ceil(size / 2.0)];
+		boolean extra = false;
+
+		final NBTTagList tileEntitiesList = new NBTTagList();
+
+		final Map<String, Short> mappings = new HashMap<>();
+		for (int y = 0; y < height; y++) {
+			for (int z = 0; z < length; z++) {
+				for (int x = 0; x < width; x++) {
+					final int index = (y * width * length) + (z * width) + x;
+					final IBlockState blockState = world.getBlockState(bottom.add(x, y, z));
+					final Block block = blockState.getBlock();
+					final int blockId = Block.REGISTRY.getIDForObject(block);
+					localBlocks[index] = (byte) blockId;
+					localMetadata[index] = (byte) block.getMetaFromState(blockState);
+					if ((extraBlocks[index] = (byte) (blockId >> 8)) > 0) {
+						extra = true;
+					}
+
+					final String name = String.valueOf(Block.REGISTRY.getNameForObject(block));
+					if (!mappings.containsKey(name)) {
+						mappings.put(name, (short) blockId);
+					}
+
+					if (blockState.getBlock() instanceof ITileEntityProvider) {
+						TileEntity tile = world.getTileEntity(bottom.add(x, y, z));
+						if (tile != null) {
+							NBTTagCompound tag = new NBTTagCompound();
+							tile.writeToNBT(tag);
+							tag.setInteger("x", x);
+							tag.setInteger("y", y);
+							tag.setInteger("z", z);
+							tileEntitiesList.appendTag(tag);
+						}
+					}
+				}
+			}
+		}
+
+		for (int i = 0; i < extraBlocksNibble.length; i++) {
+			if (((i * 2) + 1) < extraBlocks.length) {
+				extraBlocksNibble[i] = (byte) ((extraBlocks[(i * 2) + 0] << 4) | extraBlocks[(i * 2) + 1]);
+			} else {
+				extraBlocksNibble[i] = (byte) (extraBlocks[(i * 2) + 0] << 4);
+			}
+		}
+
+		final NBTTagCompound nbtMapping = new NBTTagCompound();
+		for (final Map.Entry<String, Short> entry : mappings.entrySet()) {
+			nbtMapping.setShort(entry.getKey(), entry.getValue());
+		}
+
+		NBTTagList entityList = new NBTTagList();
+
+		tagCompound.setString("Materials", "Alpha");
+		tagCompound.setByteArray("Blocks", localBlocks);
+		tagCompound.setByteArray("Data", localMetadata);
+		if (extra) {
+			tagCompound.setByteArray("AddBlocks", extraBlocksNibble);
+		}
+		tagCompound.setTag("Entities", entityList);
+		tagCompound.setTag("TileEntities", tileEntitiesList);
+		tagCompound.setTag("SchematicaMapping", nbtMapping);
+		return tagCompound;
+	}
+
 	// thanks
 	// https://stackoverflow.com/questions/109383/sort-a-mapkey-value-by-values-java
 	public static <K, V extends Comparable<? super V>> Map<K, V> sortByValue(Map<K, V> map) {
@@ -50,6 +135,7 @@ public class Schematic {
 	private Map<BlockPos, NBTTagCompound> tileEntities;
 	private NBTTagList entityList;
 	private NBTTagList tileList;
+
 	private short[] blockIds;
 
 	private byte[] metadata;
@@ -60,23 +146,7 @@ public class Schematic {
 
 	public Schematic(String name, NBTTagCompound compound) {
 		this.name = name;
-
-		width = compound.getShort("Width");
-		height = compound.getShort("Height");
-		length = compound.getShort("Length");
-		byte[] addId = compound.hasKey("AddBlocks") ? compound.getByteArray("AddBlocks") : new byte[0];
-		setBlockBytes(compound.getByteArray("Blocks"), addId);
-		metadata = compound.getByteArray("Data");
-		entityList = compound.getTagList("Entities", 10);
-		tileEntities = new HashMap<>();
-		tileList = compound.getTagList("TileEntities", 10);
-		for (int i = 0; i < tileList.tagCount(); ++i) {
-			NBTTagCompound teTag = tileList.getCompoundTagAt(i);
-			int x = teTag.getInteger("x");
-			int y = teTag.getInteger("y");
-			int z = teTag.getInteger("z");
-			tileEntities.put(new BlockPos(x, y, z), teTag);
-		}
+		readFromNBT(compound);
 	}
 
 	public void build(World world, BlockPos start, int rotation, EnumFacing facing, ICommandSender sender) {
@@ -162,29 +232,6 @@ public class Schematic {
 		}
 	}
 
-	public byte[][] getBlockBytes() {
-		byte[] blocks = new byte[blockIds.length];
-		byte[] addBlocks = null;
-		for (int i = 0; i < blocks.length; ++i) {
-			short id = blockIds[i];
-			if (id > 255) {
-				if (addBlocks == null) {
-					addBlocks = new byte[(blocks.length >> 1) + 1];
-				}
-				if ((i & 0x1) == 0x0) {
-					addBlocks[i >> 1] = (byte) ((addBlocks[i >> 1] & 0xF0) | ((id >> 8) & 0xF));
-				} else {
-					addBlocks[i >> 1] = (byte) ((addBlocks[i >> 1] & 0xF) | (((id >> 8) & 0xF) << 4));
-				}
-			}
-			blocks[i] = (byte) id;
-		}
-		if (addBlocks == null) {
-			return new byte[][] { blocks };
-		}
-		return new byte[][] { blocks, addBlocks };
-	}
-
 	public short getBlockIdAt(BlockPos pos) {
 		return getBlockIdAt(pos.getX(), pos.getX(), pos.getX());
 	}
@@ -247,8 +294,14 @@ public class Schematic {
 			if (b == Blocks.GRASS) {
 				b = Blocks.DIRT;
 			}
-
 			int meta = metadata[i];
+
+			ItemStack stack = new ItemStack(b, 1, meta);
+			if (stack == ItemStack.EMPTY) {
+				// this likely means the material can't be placed in an inventory
+				continue;
+			}
+
 			IBlockState state = b.getStateFromMeta(meta);
 			if (state.getBlock() == Blocks.AIR) {
 				continue;
@@ -308,8 +361,8 @@ public class Schematic {
 	public void place(World world, BlockPos start, int rotation, int x, int y, int z, boolean flag) {
 		int i = xyzToIndex(x, y, z);
 		Block b = Block.getBlockById(blockIds[i]);
-		if ((b == null) || (flag && !b.isFullBlock(b.getDefaultState()) && (b != Blocks.AIR))
-				|| (!flag && (b.isFullBlock(b.getDefaultState()) || (b == Blocks.AIR)))) {
+		if ((b == null) || (flag && !b.getDefaultState().isFullBlock() && (b != Blocks.AIR))
+				|| (!flag && (b.getDefaultState().isFullBlock() || (b == Blocks.AIR)))) {
 			return;
 		}
 
@@ -337,16 +390,65 @@ public class Schematic {
 		}
 	}
 
-	public void readFromNBT(NBTTagCompound compound) {
-		width = compound.getShort("Width");
-		height = compound.getShort("Height");
-		length = compound.getShort("Length");
-		byte[] addId = compound.hasKey("AddBlocks") ? compound.getByteArray("AddBlocks") : new byte[0];
-		setBlockBytes(compound.getByteArray("Blocks"), addId);
-		metadata = compound.getByteArray("Data");
-		entityList = compound.getTagList("Entities", 10);
+	public void readFromNBT(final NBTTagCompound tagCompound) {
+		final byte[] localBlocks = tagCompound.getByteArray("Blocks");
+		final byte[] localMetadata = tagCompound.getByteArray("Data");
+
+		boolean extra = false;
+		byte extraBlocks[] = null;
+		byte extraBlocksNibble[] = null;
+		if (tagCompound.hasKey("AddBlocks")) {
+			extra = true;
+			extraBlocksNibble = tagCompound.getByteArray("AddBlocks");
+			extraBlocks = new byte[extraBlocksNibble.length * 2];
+			for (int i = 0; i < extraBlocksNibble.length; i++) {
+				extraBlocks[(i * 2) + 0] = (byte) ((extraBlocksNibble[i] >> 4) & 0xF);
+				extraBlocks[(i * 2) + 1] = (byte) (extraBlocksNibble[i] & 0xF);
+			}
+		} else if (tagCompound.hasKey("Add")) {
+			extra = true;
+			extraBlocks = tagCompound.getByteArray("Add");
+		}
+
+		width = tagCompound.getShort("Width");
+		length = tagCompound.getShort("Length");
+		height = tagCompound.getShort("Height");
+
+		Short id = null;
+		final Map<Short, Short> oldToNew = new HashMap<>();
+		if (tagCompound.hasKey("SchematicaMapping")) {
+			final NBTTagCompound mapping = tagCompound.getCompoundTag("SchematicaMapping");
+			final Set<String> names = mapping.getKeySet();
+			for (final String name : names) {
+				oldToNew.put(mapping.getShort(name),
+						(short) Block.REGISTRY.getIDForObject(Block.REGISTRY.getObject(new ResourceLocation(name))));
+			}
+		}
+
+		blockIds = new short[localBlocks.length];
+		metadata = new byte[localBlocks.length];
+		for (int y = 0; y < height; y++) {
+			for (int z = 0; z < length; z++) {
+				for (int x = 0; x < width; x++) {
+					final int index = x + (((y * length) + z) * width);
+					short blockID = (short) ((localBlocks[index] & 0xFF)
+							| (extra ? ((extraBlocks[index] & 0xFF) << 8) : 0));
+					final byte meta = (byte) (localMetadata[index] & 0xFF);
+
+					if ((id = oldToNew.get(blockID)) != null) {
+						blockID = id;
+					}
+
+					blockIds[xyzToIndex(x, y, z)] = blockID;
+					metadata[xyzToIndex(x, y, z)] = meta;
+				}
+			}
+		}
+
+		entityList = tagCompound.getTagList("Entities", Constants.NBT.TAG_COMPOUND);
+
 		tileEntities = new HashMap<>();
-		tileList = compound.getTagList("TileEntities", 10);
+		tileList = tagCompound.getTagList("TileEntities", Constants.NBT.TAG_COMPOUND);
 		for (int i = 0; i < tileList.tagCount(); ++i) {
 			NBTTagCompound teTag = tileList.getCompoundTagAt(i);
 			int x = teTag.getInteger("x");
@@ -393,34 +495,66 @@ public class Schematic {
 		return state;
 	}
 
-	public void setBlockBytes(byte[] blockId, byte[] addId) {
-		blockIds = new short[blockId.length];
-		for (int index = 0; index < blockId.length; ++index) {
-			short id = (short) (blockId[index] & 0xFF);
-			if ((index >> 1) < addId.length) {
-				if ((index & 0x1) == 0x0) {
-					id += (short) ((addId[index >> 1] & 0xF) << 8);
-				} else {
-					id += (short) ((addId[index >> 1] & 0xF0) << 4);
+	public NBTTagCompound writeToNBT(final NBTTagCompound tagCompound) {
+		tagCompound.setShort("Width", getWidth());
+		tagCompound.setShort("Length", getLength());
+		tagCompound.setShort("Height", getHeight());
+
+		final byte[] localBlocks = new byte[getSize()];
+		final byte[] localMetadata = new byte[getSize()];
+		final byte[] extraBlocks = new byte[getSize()];
+		final byte[] extraBlocksNibble = new byte[(int) Math.ceil(getSize() / 2.0)];
+		boolean extra = false;
+
+		final Map<String, Short> mappings = new HashMap<>();
+		for (int y = 0; y < height; y++) {
+			for (int z = 0; z < length; z++) {
+				for (int x = 0; x < width; x++) {
+					final int index = xyzToIndex(x, y, z);
+					final Block block = Block.getBlockById(blockIds[index]);
+					final int blockId = Block.REGISTRY.getIDForObject(block);
+					localBlocks[index] = (byte) blockId;
+					localMetadata[index] = metadata[index];
+					if ((extraBlocks[index] = (byte) (blockId >> 8)) > 0) {
+						extra = true;
+					}
+
+					final String name = String.valueOf(Block.REGISTRY.getNameForObject(block));
+					if (!mappings.containsKey(name)) {
+						mappings.put(name, (short) blockId);
+					}
 				}
 			}
-			blockIds[index] = id;
 		}
-	}
 
-	public NBTTagCompound writeToNBT(NBTTagCompound compound) {
-		compound.setShort("Width", width);
-		compound.setShort("Height", height);
-		compound.setShort("Length", length);
-		byte[][] arr = getBlockBytes();
-		compound.setByteArray("Blocks", arr[0]);
-		if (arr.length > 1) {
-			compound.setByteArray("AddBlocks", arr[1]);
+		final NBTTagList tileEntitiesList = new NBTTagList();
+		for (Entry<BlockPos, NBTTagCompound> entry : getTileEntities().entrySet()) {
+			tileEntitiesList.appendTag(entry.getValue());
 		}
-		compound.setByteArray("Data", metadata);
-		compound.setTag("Entities", entityList);
-		compound.setTag("TileEntities", tileList);
-		return compound;
+
+		for (int i = 0; i < extraBlocksNibble.length; i++) {
+			if (((i * 2) + 1) < extraBlocks.length) {
+				extraBlocksNibble[i] = (byte) ((extraBlocks[(i * 2) + 0] << 4) | extraBlocks[(i * 2) + 1]);
+			} else {
+				extraBlocksNibble[i] = (byte) (extraBlocks[(i * 2) + 0] << 4);
+			}
+		}
+
+		final NBTTagCompound nbtMapping = new NBTTagCompound();
+		for (final Map.Entry<String, Short> entry : mappings.entrySet()) {
+			nbtMapping.setShort(entry.getKey(), entry.getValue());
+		}
+
+		tagCompound.setString("Materials", "Alpha");
+		tagCompound.setByteArray("Blocks", localBlocks);
+		tagCompound.setByteArray("Data", localMetadata);
+		if (extra) {
+			tagCompound.setByteArray("AddBlocks", extraBlocksNibble);
+		}
+		tagCompound.setTag("Entities", entityList);
+		tagCompound.setTag("TileEntities", tileEntitiesList);
+		tagCompound.setTag("SchematicaMapping", nbtMapping);
+		return tagCompound;
 	}
 
 	public int xyzToIndex(int x, int y, int z) {
