@@ -3,7 +3,7 @@
   "modid": "schematics",
   "name": "Schematics",
   "description": "A simple item for rendering schematics",
-  "version": "1",
+  "version": "1.1",
   "mcversion": "1.12.2",
   "url": "",
   "updateUrl": "",
