@@ -1,4 +1,4 @@
-# Schematic
+# Schematic [![Build Status](https://travis-ci.org/DomAmato/Schematic.svg?branch=master)](https://travis-ci.org/DomAmato/Schematic)
 ## Minecraft Schematics Mod
 A self contained mod for handling schematics in game. Schematics in the game directorty schematic folder are auto loaded into the creative menu and can also be created using an empty schematic and selecting two points to make a new one. Loaded schematics show a material cost and size along with the blocks used. Large schematics are threaded and chunked to keep lag down to a minimum.
 
