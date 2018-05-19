@@ -82,9 +82,3 @@ curseforge {
     releaseType = 'release'
   }
 }
-curseforge.doLast
-{
-	ant.propertyfile(file: "gradle.properties") {
-        entry( key: "buildNum", type:"int", default:"0", operation:"+")
-    }
-}
