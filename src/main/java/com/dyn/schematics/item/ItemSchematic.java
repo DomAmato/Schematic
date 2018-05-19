@@ -153,33 +153,6 @@ public class ItemSchematic extends Item {
 	}
 
 	/**
-	 * Called before a block is broken. Return true to prevent default block
-	 * harvesting.
-	 *
-	 * Note: In SMP, this is called on both client and server sides!
-	 *
-	 * @param itemstack
-	 *            The current ItemStack
-	 * @param pos
-	 *            Block's position in world
-	 * @param player
-	 *            The Player that is wielding the item
-	 * @return True to prevent harvesting, false to continue as normal
-	 */
-	@Override
-	public boolean onBlockStartBreak(ItemStack stack, BlockPos pos, EntityPlayer player) {
-		if (player.world.isRemote) {
-			if (!stack.hasTagCompound() && !SchematicMod.startPos.equals(BlockPos.ORIGIN)
-					&& !SchematicMod.endPos.equals(BlockPos.ORIGIN)) {
-				SchematicMod.proxy.openSchematicGui(false, pos, null);
-				return true;
-			}
-
-		}
-		return false;
-	}
-
-	/**
 	 * Called whenever this item is equipped and the right mouse button is pressed.
 	 * Args: itemStack, world, entityPlayer
 	 */
@@ -295,10 +268,15 @@ public class ItemSchematic extends Item {
 				return EnumActionResult.SUCCESS;
 			}
 		} else if (worldIn.isRemote) {
-			if (SchematicMod.startPos != BlockPos.ORIGIN) {
-				SchematicMod.endPos = pos;
+			if (playerIn.isSneaking() && !SchematicMod.startPos.equals(BlockPos.ORIGIN)
+					&& !SchematicMod.endPos.equals(BlockPos.ORIGIN)) {
+				SchematicMod.proxy.openSchematicGui(false, BlockPos.ORIGIN, null);
 			} else {
-				SchematicMod.startPos = pos;
+				if (SchematicMod.startPos != BlockPos.ORIGIN) {
+					SchematicMod.endPos = pos;
+				} else {
+					SchematicMod.startPos = pos;
+				}
 			}
 		}
 		return EnumActionResult.SUCCESS;
