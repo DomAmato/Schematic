@@ -50,7 +50,9 @@ public class GuiArchitect extends GuiContainer {
 		playerInventory = inventoryIn;
 		desk = (ContainerArchitect) inventorySlots;
 		schem_list = SchematicRegistry.enumerateSchematics();
-		schematic = SchematicRegistry.load(schem_list.get(0));
+		if (!schem_list.isEmpty()) {
+			schematic = SchematicRegistry.load(schem_list.get(0));
+		}
 	}
 
 	/**
@@ -195,21 +197,23 @@ public class GuiArchitect extends GuiContainer {
 	protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
 		super.mouseClicked(mouseX, mouseY, mouseButton);
 		if (desk.getSlot(0).getHasStack()) {
-			int i = (width - xSize) / 2;
-			int j = (height - ySize) / 2;
-			if (isInsideArea(mouseX, mouseY, (int) (i - (xSize * .2)), (j + (ySize / 2)) - 16, 32, 32)) {
-				index--;
-				if (index < 0) {
-					index = Math.max(schem_list.size() - 1, 0);
+			if (!schem_list.isEmpty()) {
+				int i = (width - xSize) / 2;
+				int j = (height - ySize) / 2;
+				if (isInsideArea(mouseX, mouseY, (int) (i - (xSize * .2)), (j + (ySize / 2)) - 16, 32, 32)) {
+					index--;
+					if (index < 0) {
+						index = Math.max(schem_list.size() - 1, 0);
+					}
+					schematic = SchematicRegistry.load(schem_list.get(index));
+					updateSchematic();
+				} else if (isInsideArea(mouseX, mouseY, (int) (i + (xSize * 1.05)), (j + (ySize / 2)) - 16, 32, 32)) {
+					index++;
+					index %= schem_list.size();
+					index = Math.max(index, 0);
+					schematic = SchematicRegistry.load(schem_list.get(index));
+					updateSchematic();
 				}
-				schematic = SchematicRegistry.load(schem_list.get(index));
-				updateSchematic();
-			} else if (isInsideArea(mouseX, mouseY, (int) (i + (xSize * 1.05)), (j + (ySize / 2)) - 16, 32, 32)) {
-				index++;
-				index %= schem_list.size();
-				index = Math.max(index, 0);
-				schematic = SchematicRegistry.load(schem_list.get(index));
-				updateSchematic();
 			}
 		}
 	}
