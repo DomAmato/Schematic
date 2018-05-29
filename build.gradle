@@ -78,7 +78,13 @@ curseforge {
   apiKey = "${api_key}"
   project {
     id = '294075'
-    changelog = 'consult the github'
+    changelog = 'Claim Block Inventory and GUI among various bug fixes'
     releaseType = 'release'
   }
+}
+
+task upload(dependsOn: 'curseforge') {
+    ant.propertyfile(file: "gradle.properties") {
+        entry( key: "buildNum", type:"int", default:"0", operation:"+")
+    }
 }
