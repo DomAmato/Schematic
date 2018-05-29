@@ -1,14 +1,23 @@
 package com.dyn.schematics.block;
 
+import java.util.UUID;
+
 import com.dyn.schematics.Schematic;
+import com.dyn.schematics.inventory.InventorySchematicClaim;
+import com.dyn.schematics.registry.SchematicRenderingRegistry;
+import com.dyn.schematics.utils.SimpleItemStack;
 
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.init.Blocks;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
 import net.minecraft.network.NetworkManager;
 import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import net.minecraftforge.common.util.Constants;
 
 public class ClaimBlockTileEntity extends TileEntity {
 
@@ -16,6 +25,16 @@ public class ClaimBlockTileEntity extends TileEntity {
 	private BlockPos schem_pos;
 	private boolean active;
 	private int rotation;
+	private UUID placer;
+	private InventorySchematicClaim inventory;
+
+	public InventorySchematicClaim getInventory() {
+		return inventory;
+	}
+
+	public UUID getPlacer() {
+		return placer;
+	}
 
 	public int getRotation() {
 		return rotation;
@@ -60,15 +79,31 @@ public class ClaimBlockTileEntity extends TileEntity {
 	public void readFromNBT(NBTTagCompound compound) {
 		super.readFromNBT(compound);
 		if (compound.hasKey("schematic")) {
-			schematic = new Schematic(compound.getString("schem_name"), compound.getCompoundTag("schematic"));
-			schem_pos = BlockPos.fromLong(compound.getLong("schem_loc"));
+			setSchematic(new Schematic(compound.getString("schem_name"), compound.getCompoundTag("schematic")),
+					BlockPos.fromLong(compound.getLong("schem_loc")));
+
+			// active = compound.getBoolean("active");
+			NBTTagList nbttaglist = compound.getTagList("Items", Constants.NBT.TAG_COMPOUND);
+			for (int i = 0; i < nbttaglist.tagCount(); i++) {
+				NBTTagCompound itemtag = nbttaglist.getCompoundTagAt(i);
+				int slot = itemtag.getByte("Slot") & 0xFF;
+				int remaining = itemtag.getInteger("Remaining");
+				if ((slot >= 0) && (slot < inventory.getSizeInventory())) {
+					inventory.setInventorySlotContents(slot, new ItemStack(itemtag));
+					inventory.setAmountRemaining(new SimpleItemStack(new ItemStack(itemtag)), remaining);
+				}
+			}
 		}
-		// active = compound.getBoolean("active");
+		placer = compound.getUniqueId("placer");
 		rotation = compound.getInteger("rot");
 	}
 
 	public void setActive(boolean active) {
 		this.active = active;
+	}
+
+	public void setPlacer(UUID placer) {
+		this.placer = placer;
 	}
 
 	public void setRotation(int rotation) {
@@ -78,6 +113,8 @@ public class ClaimBlockTileEntity extends TileEntity {
 	public void setSchematic(Schematic schematic, BlockPos pos) {
 		this.schematic = schematic;
 		schem_pos = pos;
+		inventory = new InventorySchematicClaim(schematic.getName(), schematic.getRequiredMaterials().size());
+		inventory.loadMaterials(schematic);
 	}
 
 	public void setSchematicPos(BlockPos schem_pos) {
@@ -85,8 +122,11 @@ public class ClaimBlockTileEntity extends TileEntity {
 	}
 
 	@Override
-	public boolean shouldRefresh(World world, BlockPos pos, IBlockState oldState, IBlockState newSate) {
-		return (oldState.getBlock() != newSate.getBlock());
+	public boolean shouldRefresh(World world, BlockPos pos, IBlockState oldState, IBlockState newState) {
+		if ((newState.getBlock() == Blocks.AIR) && world.isRemote) {
+			SchematicRenderingRegistry.removeSchematic(schematic);
+		}
+		return (oldState.getBlock() != newState.getBlock());
 	}
 
 	@Override
@@ -98,9 +138,23 @@ public class ClaimBlockTileEntity extends TileEntity {
 			compound.setString("schem_name", schematic.getName());
 			compound.setTag("schematic", subcompound);
 			compound.setLong("schem_loc", schem_pos.toLong());
+
+			// compound.setBoolean("active", active);
+			compound.setInteger("rot", rotation);
+			NBTTagList nbttaglist = new NBTTagList();
+			for (int i = 0; i < inventory.getSizeInventory(); i++) {
+				if (inventory.getStackInSlot(i) != null) {
+					NBTTagCompound itemtag = new NBTTagCompound();
+					itemtag.setByte("Slot", (byte) i);
+					inventory.getStackInSlot(i).writeToNBT(itemtag);
+					itemtag.setInteger("Remaining",
+							inventory.getTotalMaterials().get(new SimpleItemStack(inventory.getStackInSlot(i))));
+					nbttaglist.appendTag(itemtag);
+				}
+			}
+			compound.setTag("Items", nbttaglist);
 		}
-		// compound.setBoolean("active", active);
-		compound.setInteger("rot", rotation);
+		compound.setUniqueId("placer", placer);
 		return compound;
 	}
 }

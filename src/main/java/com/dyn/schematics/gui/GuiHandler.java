@@ -9,7 +9,10 @@ public class GuiHandler implements IGuiHandler {
 	@Override
 	public Object getClientGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
 		if (ID == GuiArchitect.ID) {
-			return new GuiArchitect(player.inventory, world);
+			return new GuiArchitect(player, world);
+		}
+		if (ID == GuiClaimBlock.ID) {
+			return new GuiClaimBlock(player, world, new BlockPos(x, y, z));
 		}
 		return null;
 	}
@@ -17,7 +20,10 @@ public class GuiHandler implements IGuiHandler {
 	@Override
 	public Object getServerGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
 		if (ID == GuiArchitect.ID) {
-			return new ContainerArchitect(player.inventory, world, new BlockPos(x, y, z));
+			return new ContainerArchitect(player, world, new BlockPos(x, y, z));
+		}
+		if (ID == GuiClaimBlock.ID) {
+			return new ContainerClaimBlock(player, world, new BlockPos(x, y, z));
 		}
 		return null;
 	}

@@ -2,12 +2,15 @@ package com.dyn.schematics.block;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Random;
 
 import javax.annotation.Nullable;
 
 import com.dyn.schematics.SchematicMod;
+import com.dyn.schematics.gui.GuiClaimBlock;
 import com.dyn.schematics.registry.SchematicRenderingRegistry;
+import com.dyn.schematics.utils.SimpleItemStack;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.ITileEntityProvider;
@@ -16,6 +19,7 @@ import net.minecraft.block.properties.PropertyDirection;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.inventory.InventoryHelper;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -25,6 +29,7 @@ import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
+import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
@@ -138,31 +143,21 @@ public class BlockSchematicClaim extends Block implements ITileEntityProvider {
 	@Override
 	public boolean onBlockActivated(World worldIn, BlockPos pos, IBlockState state, EntityPlayer playerIn,
 			EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {
-		if (worldIn.isRemote) {
-			TileEntity tileentity = worldIn.getTileEntity(pos);
-			if ((tileentity instanceof ClaimBlockTileEntity)
-					&& (((ClaimBlockTileEntity) tileentity).getSchematic() != null)) {
-				if (!playerIn.isSneaking()) {
-					if (((ClaimBlockTileEntity) tileentity).isActive()) {
-						if (SchematicRenderingRegistry.containsCompiledSchematic(
-								((ClaimBlockTileEntity) tileentity).getSchematic(),
-								((ClaimBlockTileEntity) tileentity).getSchematicPos())) {
-							SchematicMod.proxy.openSchematicGui(true, pos,
-									((ClaimBlockTileEntity) tileentity).getSchematic());
-						}
-					} else {
-						((ClaimBlockTileEntity) tileentity).setActive(true);
-					}
-				}
-			}
-		} else {
+		TileEntity tileentity = worldIn.getTileEntity(pos);
+		if ((tileentity instanceof ClaimBlockTileEntity)
+				&& (((ClaimBlockTileEntity) tileentity).getSchematic() != null)) {
 			if (playerIn.isSneaking()) {
-				TileEntity tileentity = worldIn.getTileEntity(pos);
-				if ((tileentity instanceof ClaimBlockTileEntity)
-						&& (((ClaimBlockTileEntity) tileentity).getSchematic() != null)) {
+				if (!worldIn.isRemote) {
 					((ClaimBlockTileEntity) tileentity)
 							.setRotation((((ClaimBlockTileEntity) tileentity).getRotation() + 1) % 4);
 					((ClaimBlockTileEntity) tileentity).markForUpdate();
+				}
+			} else {
+				if (((ClaimBlockTileEntity) tileentity).isActive()) {
+					playerIn.openGui(SchematicMod.instance, GuiClaimBlock.ID, worldIn, pos.getX(), pos.getY(),
+							pos.getZ());
+				} else {
+					((ClaimBlockTileEntity) tileentity).setActive(true);
 				}
 			}
 		}
@@ -187,11 +182,19 @@ public class BlockSchematicClaim extends Block implements ITileEntityProvider {
 	public boolean removedByPlayer(IBlockState state, World world, BlockPos pos, EntityPlayer player,
 			boolean willHarvest) {
 		TileEntity tileentity = world.getTileEntity(pos);
-		boolean result = super.removedByPlayer(state, world, pos, player, willHarvest);
-		if (result) {
-			if (!world.isRemote) {
-				if (willHarvest) {
-					if ((tileentity instanceof ClaimBlockTileEntity)) {
+		boolean result = true;
+		if ((tileentity instanceof ClaimBlockTileEntity)) {
+			if ((world.getPlayerEntityByUUID(((ClaimBlockTileEntity) tileentity).getPlacer()) != player)
+					&& (player.getUniqueID() != ((ClaimBlockTileEntity) tileentity).getPlacer())) {
+				result = false;
+				player.sendMessage(new TextComponentString("Cannot break other players claimed tiles"));
+			} else {
+				result = super.removedByPlayer(state, world, pos, player, willHarvest);
+			}
+
+			if (result) {
+				if (!world.isRemote) {
+					if (willHarvest) {
 						if ((((ClaimBlockTileEntity) tileentity).getSchematic() != null)) {
 							ItemStack is = new ItemStack(SchematicMod.schematic);
 							NBTTagCompound compound = new NBTTagCompound();
@@ -203,15 +206,32 @@ public class BlockSchematicClaim extends Block implements ITileEntityProvider {
 							// we have to do this here otherwise it spawns in an
 							// empty schematic
 							Block.spawnAsEntity(world, pos, is);
+
+							for (Entry<Block, Integer> entry : ((ClaimBlockTileEntity) tileentity).getSchematic()
+									.getRequiredMaterials().entrySet()) {
+								ItemStack stack = new ItemStack(entry.getKey());
+								int amount = entry.getValue();
+								Random rand = new Random();
+								if (stack.isEmpty()) {
+									stack = new ItemStack(
+											entry.getKey().getItemDropped(entry.getKey().getDefaultState(), rand, 0));
+									amount = amount * entry.getKey().quantityDropped(rand);
+								}
+								SimpleItemStack key = new SimpleItemStack(stack);
+								int diff = entry.getValue() - ((ClaimBlockTileEntity) tileentity).getInventory()
+										.getTotalMaterials().get(key);
+								InventoryHelper.spawnItemStack(world, pos.getX(), pos.getY(), pos.getZ(),
+										new ItemStack(key.getItem(), diff));
+							}
 						} else {
 							Block.spawnAsEntity(world, pos, new ItemStack(SchematicMod.schematic));
 						}
 					}
-				}
-			} else {
-				if ((tileentity instanceof ClaimBlockTileEntity)
-						&& (((ClaimBlockTileEntity) tileentity).getSchematic() != null)) {
-					SchematicRenderingRegistry.removeSchematic(((ClaimBlockTileEntity) tileentity).getSchematic());
+				} else {
+					if ((tileentity instanceof ClaimBlockTileEntity)
+							&& (((ClaimBlockTileEntity) tileentity).getSchematic() != null)) {
+						SchematicRenderingRegistry.removeSchematic(((ClaimBlockTileEntity) tileentity).getSchematic());
+					}
 				}
 			}
 		}

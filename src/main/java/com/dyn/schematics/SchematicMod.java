@@ -56,6 +56,8 @@ public class SchematicMod {
 
 	public static int max_size;
 
+	public static boolean integrated = true;
+
 	public static void synchronizeConfig() {
 		SchematicMod.can_build = SchematicMod.configFile.getBoolean("Allow Building", Configuration.CATEGORY_GENERAL,
 				true, "Allow players to build from schematics on the server");
@@ -80,6 +82,12 @@ public class SchematicMod {
 	public void preInit(FMLPreInitializationEvent event) {
 		SchematicMod.logger = event.getModLog();
 		SchematicMod.proxy.preInit();
+
+		try {
+			Class.forName("net.minecraft.client.Minecraft");
+		} catch (ClassNotFoundException e) {
+			SchematicMod.integrated = false;
+		}
 
 		NetworkManager.registerMessages();
 
