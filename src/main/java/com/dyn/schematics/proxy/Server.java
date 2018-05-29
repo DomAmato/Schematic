@@ -2,12 +2,10 @@ package com.dyn.schematics.proxy;
 
 import java.io.File;
 
-import com.dyn.schematics.Schematic;
 import com.dyn.schematics.registry.SchematicRegistry;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.util.IThreadListener;
-import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
@@ -41,7 +39,7 @@ public class Server implements Proxy {
 	}
 
 	@Override
-	public void openSchematicGui(boolean build, BlockPos pos, Schematic schem) {
+	public void openSchematicGui() {
 	}
 
 	@Override

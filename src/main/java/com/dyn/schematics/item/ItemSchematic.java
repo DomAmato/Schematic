@@ -263,6 +263,8 @@ public class ItemSchematic extends Item {
 					Schematic schem = new Schematic(stack.getTagCompound().getString("title") + schem_pos.toLong(),
 							stack.getTagCompound());
 					((ClaimBlockTileEntity) tileentity).setSchematic(schem, schem_pos);
+					((ClaimBlockTileEntity) tileentity).setPlacer(playerIn.getUniqueID());
+					((ClaimBlockTileEntity) tileentity).markDirty();
 				}
 
 				return EnumActionResult.SUCCESS;
@@ -270,7 +272,7 @@ public class ItemSchematic extends Item {
 		} else if (worldIn.isRemote) {
 			if (playerIn.isSneaking() && !SchematicMod.startPos.equals(BlockPos.ORIGIN)
 					&& !SchematicMod.endPos.equals(BlockPos.ORIGIN)) {
-				SchematicMod.proxy.openSchematicGui(false, BlockPos.ORIGIN, null);
+				SchematicMod.proxy.openSchematicGui();
 			} else {
 				if (SchematicMod.startPos != BlockPos.ORIGIN) {
 					SchematicMod.endPos = pos;
