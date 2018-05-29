@@ -28,6 +28,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.Constants;
@@ -115,6 +116,19 @@ public class Schematic {
 		return tagCompound;
 	}
 
+	public static int getCost(ItemStack stack) {
+		if (stack.hasTagCompound()) {
+			NBTTagCompound compound = stack.getTagCompound();
+			if (compound.hasKey("Blocks") && compound.hasKey("Data") && compound.hasKey("Width")
+					&& compound.hasKey("Length") && compound.hasKey("Height")) {
+				Schematic schem = new Schematic(stack.getDisplayName(), compound);
+				return MathHelper.clamp(schem.getTotalMaterialCost(schem.getRequiredMaterials()) / 500, 1, 64);
+
+			}
+		}
+		return 0;
+	}
+
 	// thanks
 	// https://stackoverflow.com/questions/109383/sort-a-mapkey-value-by-values-java
 	public static <K, V extends Comparable<? super V>> Map<K, V> sortByValue(Map<K, V> map) {
@@ -134,6 +148,7 @@ public class Schematic {
 	private short length;
 	private Map<BlockPos, NBTTagCompound> tileEntities;
 	private NBTTagList entityList;
+
 	private NBTTagList tileList;
 
 	private short[] blockIds;
@@ -291,7 +306,7 @@ public class Schematic {
 			if (b == null) {
 				continue;
 			}
-			if (b == Blocks.GRASS) {
+			if ((b == Blocks.GRASS) || (b == Blocks.GRASS_PATH)) {
 				b = Blocks.DIRT;
 			}
 			int meta = metadata[i];
@@ -554,6 +569,7 @@ public class Schematic {
 		tagCompound.setTag("Entities", entityList);
 		tagCompound.setTag("TileEntities", tileEntitiesList);
 		tagCompound.setTag("SchematicaMapping", nbtMapping);
+
 		return tagCompound;
 	}
 

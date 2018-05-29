@@ -4,7 +4,6 @@ import com.dyn.schematics.Schematic;
 import com.dyn.schematics.SchematicMod;
 
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.init.Items;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.IContainerListener;
@@ -30,20 +29,19 @@ public class ContainerArchitect extends Container {
 	private final World world;
 	private final BlockPos selfPosition;
 	/** The maximum cost of repairing/renaming in the anvil. */
-	public int maximumCost;
-	/** determined by damage of input item and stackSize of repair materials */
-	public int materialCost;
+	public int cost;
 	private String schematicName;
 	/** The player that has this container open. */
 	private NBTTagCompound nbtTag;
 
 	@SideOnly(Side.CLIENT)
-	public ContainerArchitect(InventoryPlayer playerInventory, World worldIn) {
-		this(playerInventory, worldIn, BlockPos.ORIGIN);
+	public ContainerArchitect(EntityPlayer player, World worldIn) {
+		this(player, worldIn, BlockPos.ORIGIN);
 	}
 
-	public ContainerArchitect(InventoryPlayer playerInventory, final World worldIn, final BlockPos blockPosIn) {
+	public ContainerArchitect(EntityPlayer player, final World worldIn, final BlockPos blockPosIn) {
 		outputSlot = new InventoryCraftResult();
+		player.inventory.openInventory(player);
 		inputSlots = new InventoryBasic("Achitect", true, 2) {
 			/**
 			 * For tile entities, ensures the chunk containing the tile entity is saved to
@@ -87,7 +85,8 @@ public class ContainerArchitect extends Container {
 			 */
 			@Override
 			public boolean canTakeStack(EntityPlayer playerIn) {
-				return (inputSlots.getStackInSlot(1).getCount() >= maximumCost) && (maximumCost > 0) && getHasStack();
+				return (inputSlots.getStackInSlot(1).getCount() >= Schematic.getCost(outputSlot.getStackInSlot(0)))
+						&& (Schematic.getCost(outputSlot.getStackInSlot(0)) > 0) && getHasStack();
 			}
 
 			/**
@@ -104,20 +103,14 @@ public class ContainerArchitect extends Container {
 
 				inputSlots.setInventorySlotContents(0, ItemStack.EMPTY);
 
-				if (materialCost > 0) {
-					ItemStack itemstack = inputSlots.getStackInSlot(1);
+				ItemStack itemstack = inputSlots.getStackInSlot(1);
 
-					if (!itemstack.isEmpty() && (itemstack.getCount() > materialCost)) {
-						itemstack.shrink(materialCost);
-						inputSlots.setInventorySlotContents(1, itemstack);
-					} else {
-						inputSlots.setInventorySlotContents(1, ItemStack.EMPTY);
-					}
+				if (!itemstack.isEmpty() && (itemstack.getCount() > Schematic.getCost(stack))) {
+					itemstack.shrink(Schematic.getCost(stack));
+					inputSlots.setInventorySlotContents(1, itemstack);
 				} else {
 					inputSlots.setInventorySlotContents(1, ItemStack.EMPTY);
 				}
-
-				maximumCost = 0;
 
 				return stack;
 			}
@@ -125,14 +118,15 @@ public class ContainerArchitect extends Container {
 
 		// the hotbar
 		for (int k = 0; k < 9; ++k) {
-			addSlotToContainer(new Slot(playerInventory, k, 8 + (k * 18), 169));
+			addSlotToContainer(new Slot(player.inventory, k, 8 + (k * 18), 169));
 		}
+		cost = 0;
 	}
 
 	@Override
 	public void addListener(IContainerListener listener) {
 		super.addListener(listener);
-		listener.sendWindowProperty(this, 0, maximumCost);
+		listener.sendWindowProperty(this, 0, cost);
 	}
 
 	@Override
@@ -223,11 +217,11 @@ public class ContainerArchitect extends Container {
 	 */
 	public void updateSchematicOutput() {
 		ItemStack itemstack = inputSlots.getStackInSlot(0);
-		maximumCost = 1;
+		cost = 1;
 
 		if (itemstack.isEmpty()) {
 			outputSlot.setInventorySlotContents(0, ItemStack.EMPTY);
-			maximumCost = 0;
+			cost = 0;
 		} else {
 			ItemStack itemstack1 = itemstack.copy();
 			// we should change the name to the currently selected schematic, hwo do we do
@@ -237,7 +231,7 @@ public class ContainerArchitect extends Container {
 				Schematic schem = new Schematic(schematicName, nbtTag);
 				itemstack1 = new ItemStack(SchematicMod.schematic);
 				itemstack1.setTagCompound(nbtTag);
-				maximumCost = MathHelper.clamp(schem.getTotalMaterialCost(schem.getRequiredMaterials()) / 500, 1, 64);
+				cost = MathHelper.clamp(schem.getTotalMaterialCost(schem.getRequiredMaterials()) / 500, 1, 64);
 			}
 			outputSlot.setInventorySlotContents(0, itemstack1);
 

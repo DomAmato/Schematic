@@ -19,6 +19,7 @@ import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Slot;
 import net.minecraft.nbt.NBTTagCompound;
@@ -45,9 +46,10 @@ public class GuiArchitect extends GuiContainer {
 	private Schematic schematic;
 	private List<String> schem_list;
 
-	public GuiArchitect(InventoryPlayer inventoryIn, World worldIn) {
-		super(new ContainerArchitect(inventoryIn, worldIn));
-		playerInventory = inventoryIn;
+	public GuiArchitect(EntityPlayer player, World worldIn) {
+		super(new ContainerArchitect(player, worldIn));
+		playerInventory = player.inventory;
+
 		desk = (ContainerArchitect) inventorySlots;
 		schem_list = SchematicRegistry.enumerateSchematics();
 		if (!schem_list.isEmpty()) {
@@ -120,7 +122,7 @@ public class GuiArchitect extends GuiContainer {
 				}
 			}
 
-			if (desk.maximumCost > 0) {
+			if (desk.cost > 0) {
 				int i = 8453920;
 				boolean flag = true;
 
@@ -139,13 +141,13 @@ public class GuiArchitect extends GuiContainer {
 						fontRenderer.drawString(" Cost", -37, 35, j);
 						fontRenderer.drawString(" Cost", -36, 34, j);
 						fontRenderer.drawString(" Cost", -36, 35, j);
-						fontRenderer.drawString(desk.maximumCost + " Gold", -37, 45, j);
-						fontRenderer.drawString(desk.maximumCost + " Gold", -36, 44, j);
-						fontRenderer.drawString(desk.maximumCost + " Gold", -36, 45, j);
+						fontRenderer.drawString(desk.cost + " Gold", -37, 45, j);
+						fontRenderer.drawString(desk.cost + " Gold", -36, 44, j);
+						fontRenderer.drawString(desk.cost + " Gold", -36, 45, j);
 					}
 
 					fontRenderer.drawString(" Cost", -37, 34, i);
-					fontRenderer.drawString(desk.maximumCost + " Gold", -37, 44, i);
+					fontRenderer.drawString(desk.cost + " Gold", -37, 44, i);
 				}
 			}
 			GlStateManager.enableLighting();
@@ -226,10 +228,14 @@ public class GuiArchitect extends GuiContainer {
 				&& s.equals(slot.getStack().getDisplayName())) {
 			s = "";
 		}
+		if (schematic.getSize() < 10000) {
+			// a packet can only contain 32kb which any large schematic will easily eclipse
+			NBTTagCompound tag = schematic.writeToNBT(new NBTTagCompound());
+			desk.updateSchematicContents(s, tag);
+			tag.setString("title", s);
+			NetworkManager.sendToServer(new MessageUpdateSchematicNBT(tag));
+		} else {
 
-		NBTTagCompound tag = schematic.writeToNBT(new NBTTagCompound());
-		desk.updateSchematicContents(s, tag);
-		tag.setString("title", s);
-		NetworkManager.sendToServer(new MessageUpdateSchematicNBT(tag));
+		}
 	}
 }
