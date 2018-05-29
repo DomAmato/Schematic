@@ -7,13 +7,17 @@ import java.io.IOException;
 import java.util.regex.Pattern;
 
 import com.dyn.schematics.Schematic;
+import com.dyn.schematics.SchematicMod;
 import com.dyn.schematics.item.ItemSchematic;
+import com.dyn.schematics.network.NetworkManager;
+import com.dyn.schematics.network.messages.MessageSaveSchematicToClient;
 
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.command.NumberInvalidException;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
@@ -56,6 +60,15 @@ public class CommandSaveSchematic extends CommandBase {
 		BlockPos bottom = getMinPoint(pos1, pos2);
 		BlockPos top = getMaxPoint(pos1, pos2);
 
+		short width = (short) (1 + Math.abs(bottom.getX() - top.getX()));
+		short height = (short) (1 + Math.abs(bottom.getY() - top.getY()));
+		short length = (short) (1 + Math.abs(bottom.getZ() - top.getZ()));
+
+		int size = width * height * length;
+
+		if (size > (SchematicMod.max_size * 2)) {
+			throw new CommandException("Schematic is too large to save", new Object[0]);
+		}
 		World world = sender.getEntityWorld();
 		NBTTagCompound nbt = Schematic.generateSchematicNBT(world, bottom, top);
 
@@ -63,6 +76,11 @@ public class CommandSaveSchematic extends CommandBase {
 			DataOutputStream dataoutputstream = new DataOutputStream(
 					new FileOutputStream(new File(server.getDataDirectory(), "schematics/" + name)));
 			CompressedStreamTools.writeCompressed(nbt, dataoutputstream);
+			if ((sender instanceof EntityPlayer) && !SchematicMod.integrated && (size < 10000)) {
+				// only send the message to save if its not integrated and the packet is less
+				// than 32kb
+				NetworkManager.sendTo(new MessageSaveSchematicToClient(name, nbt), (EntityPlayerMP) sender);
+			}
 		} catch (IOException e) {
 			throw new CommandException("Failed writing schematic to file", new Object[0]);
 		}

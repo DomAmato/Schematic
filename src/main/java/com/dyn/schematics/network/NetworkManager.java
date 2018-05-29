@@ -1,6 +1,7 @@
 package com.dyn.schematics.network;
 
 import com.dyn.schematics.network.messages.MessageBuildSchematicFromTileEntity;
+import com.dyn.schematics.network.messages.MessageSaveSchematicToClient;
 import com.dyn.schematics.network.messages.MessageUpdateSchematicNBT;
 import com.dyn.schematics.reference.Reference;
 
@@ -59,6 +60,8 @@ public class NetworkManager {
 				MessageBuildSchematicFromTileEntity.Handler.class, Side.SERVER);
 		NetworkManager.registerMessage(MessageUpdateSchematicNBT.class, MessageUpdateSchematicNBT.Handler.class,
 				Side.SERVER);
+		NetworkManager.registerMessage(MessageSaveSchematicToClient.class, MessageSaveSchematicToClient.Handler.class,
+				Side.CLIENT);
 
 	}
 
