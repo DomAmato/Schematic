@@ -184,12 +184,14 @@ public class BlockSchematicClaim extends Block implements ITileEntityProvider {
 		TileEntity tileentity = world.getTileEntity(pos);
 		boolean result = true;
 		if ((tileentity instanceof ClaimBlockTileEntity)) {
-			if ((world.getPlayerEntityByUUID(((ClaimBlockTileEntity) tileentity).getPlacer()) != player)
-					&& (player.getUniqueID() != ((ClaimBlockTileEntity) tileentity).getPlacer())) {
-				result = false;
-				player.sendMessage(new TextComponentString("Cannot break other players claimed tiles"));
-			} else {
-				result = super.removedByPlayer(state, world, pos, player, willHarvest);
+			if (!world.isRemote) {
+				if ((world.getPlayerEntityByUUID(((ClaimBlockTileEntity) tileentity).getPlacer()) != player)
+						&& (player.getUniqueID() != ((ClaimBlockTileEntity) tileentity).getPlacer())) {
+					result = false;
+					player.sendMessage(new TextComponentString("Cannot break other players claimed plots"));
+				} else {
+					result = super.removedByPlayer(state, world, pos, player, willHarvest);
+				}
 			}
 
 			if (result) {
@@ -210,12 +212,10 @@ public class BlockSchematicClaim extends Block implements ITileEntityProvider {
 							for (Entry<Block, Integer> entry : ((ClaimBlockTileEntity) tileentity).getSchematic()
 									.getRequiredMaterials().entrySet()) {
 								ItemStack stack = new ItemStack(entry.getKey());
-								int amount = entry.getValue();
 								Random rand = new Random();
 								if (stack.isEmpty()) {
 									stack = new ItemStack(
 											entry.getKey().getItemDropped(entry.getKey().getDefaultState(), rand, 0));
-									amount = amount * entry.getKey().quantityDropped(rand);
 								}
 								SimpleItemStack key = new SimpleItemStack(stack);
 								int diff = entry.getValue() - ((ClaimBlockTileEntity) tileentity).getInventory()
