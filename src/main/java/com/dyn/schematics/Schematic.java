@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Queue;
+import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -122,7 +123,7 @@ public class Schematic {
 			if (compound.hasKey("Blocks") && compound.hasKey("Data") && compound.hasKey("Width")
 					&& compound.hasKey("Length") && compound.hasKey("Height")) {
 				Schematic schem = new Schematic(stack.getDisplayName(), compound);
-				return MathHelper.clamp(schem.getTotalMaterialCost(schem.getRequiredMaterials()) / 500, 1, 64);
+				return MathHelper.clamp(schem.getTotalMaterialCost() / 500, 1, 64);
 
 			}
 		}
@@ -154,6 +155,8 @@ public class Schematic {
 	private short[] blockIds;
 
 	private byte[] metadata;
+	Map<Block, Integer> reqMaterial = Maps.newHashMap();
+	private int materialCost = 0;
 
 	public Schematic(String name) {
 		this.name = name;
@@ -300,34 +303,7 @@ public class Schematic {
 	}
 
 	public Map<Block, Integer> getRequiredMaterials() {
-		Map<Block, Integer> reqBlocks = Maps.newHashMap();
-		for (int i = 0; i < blockIds.length; i++) {
-			Block b = Block.getBlockById(blockIds[i]);
-			if (b == null) {
-				continue;
-			}
-			if ((b == Blocks.GRASS) || (b == Blocks.GRASS_PATH)) {
-				b = Blocks.DIRT;
-			}
-			int meta = metadata[i];
-
-			ItemStack stack = new ItemStack(b, 1, meta);
-			if (stack == ItemStack.EMPTY) {
-				// this likely means the material can't be placed in an inventory
-				continue;
-			}
-
-			IBlockState state = b.getStateFromMeta(meta);
-			if (state.getBlock() == Blocks.AIR) {
-				continue;
-			}
-			if (reqBlocks.containsKey(state.getBlock())) {
-				reqBlocks.replace(state.getBlock(), reqBlocks.get(state.getBlock()) + 1);
-			} else {
-				reqBlocks.put(state.getBlock(), 1);
-			}
-		}
-		return Schematic.sortByValue(reqBlocks);
+		return Schematic.sortByValue(reqMaterial);
 	}
 
 	public int getSize() {
@@ -356,12 +332,8 @@ public class Schematic {
 		return tileList;
 	}
 
-	public int getTotalMaterialCost(Map<Block, Integer> materials) {
-		int total = 0;
-		for (Entry<Block, Integer> material : materials.entrySet()) {
-			total += material.getValue();
-		}
-		return total;
+	public int getTotalMaterialCost() {
+		return materialCost;
 	}
 
 	/**
@@ -470,6 +442,42 @@ public class Schematic {
 			int y = teTag.getInteger("y");
 			int z = teTag.getInteger("z");
 			tileEntities.put(new BlockPos(x, y, z), teTag);
+		}
+
+		Random rand = new Random();
+		for (int i = 0; i < blockIds.length; i++) {
+			Block b = Block.getBlockById(blockIds[i]);
+			if (b == null) {
+				continue;
+			}
+			if ((b == Blocks.GRASS) || (b == Blocks.GRASS_PATH)) {
+				b = Blocks.DIRT;
+			}
+			int meta = metadata[i];
+
+			IBlockState state = b.getStateFromMeta(meta);
+			if (state.getBlock() == Blocks.AIR) {
+				continue;
+			}
+
+			ItemStack stack = new ItemStack(b, 1, meta);
+			if (stack.isEmpty()) {
+				stack = new ItemStack(b.getItemDropped(b.getDefaultState(), rand, 0));
+				// this likely means the material can't be placed in an inventory
+				if (stack.isEmpty()) {
+					continue;
+				}
+			}
+			if (reqMaterial.containsKey(state.getBlock())) {
+				reqMaterial.replace(state.getBlock(), reqMaterial.get(state.getBlock()) + 1);
+			} else {
+				reqMaterial.put(state.getBlock(), 1);
+			}
+		}
+
+		materialCost = 0;
+		for (Entry<Block, Integer> material : reqMaterial.entrySet()) {
+			materialCost += material.getValue();
 		}
 	}
 

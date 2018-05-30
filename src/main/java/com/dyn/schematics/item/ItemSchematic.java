@@ -98,13 +98,10 @@ public class ItemSchematic extends Item {
 
 			Schematic schem = new Schematic(schemName, nbttagcompound);
 
-			Map<Block, Integer> materials = schem.getRequiredMaterials();
-
 			return schemName + TextFormatting.RESET + " ("
-					+ (schem.getTotalMaterialCost(materials) <= 500 ? TextFormatting.DARK_GREEN
-							: schem.getTotalMaterialCost(materials) <= 1500 ? TextFormatting.YELLOW
-									: TextFormatting.RED)
-					+ schem.getTotalMaterialCost(materials) + TextFormatting.RESET + ")";
+					+ (schem.getTotalMaterialCost() <= 500 ? TextFormatting.DARK_GREEN
+							: schem.getTotalMaterialCost() <= 1500 ? TextFormatting.YELLOW : TextFormatting.RED)
+					+ schem.getTotalMaterialCost() + TextFormatting.RESET + ")";
 		}
 		return super.getItemStackDisplayName(stack);
 	}

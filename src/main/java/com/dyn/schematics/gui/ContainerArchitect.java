@@ -224,14 +224,14 @@ public class ContainerArchitect extends Container {
 			cost = 0;
 		} else {
 			ItemStack itemstack1 = itemstack.copy();
-			// we should change the name to the currently selected schematic, hwo do we do
+			// we should change the name to the currently selected schematic, how do we do
 			// that
 			if (nbtTag != null) {
 				nbtTag.setString("title", schematicName);
 				Schematic schem = new Schematic(schematicName, nbtTag);
 				itemstack1 = new ItemStack(SchematicMod.schematic);
 				itemstack1.setTagCompound(nbtTag);
-				cost = MathHelper.clamp(schem.getTotalMaterialCost(schem.getRequiredMaterials()) / 500, 1, 64);
+				cost = MathHelper.clamp(schem.getTotalMaterialCost() / 500, 1, 64);
 			}
 			outputSlot.setInventorySlotContents(0, itemstack1);
 
