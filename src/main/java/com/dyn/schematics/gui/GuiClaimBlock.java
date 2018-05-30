@@ -30,6 +30,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.GameType;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
@@ -68,14 +69,13 @@ public class GuiClaimBlock extends GuiContainer {
 					mc.player.closeScreen();
 				} else {
 					Map<SimpleItemStack, Integer> totalMaterials = tile.getInventory().getTotalMaterials();
+					Random rand = new Random();
 					for (Entry<Block, Integer> entry : tile.getSchematic().getRequiredMaterials().entrySet()) {
 						ItemStack stack = new ItemStack(entry.getKey());
-						int amount = entry.getValue();
-						Random rand = new Random();
+
 						if (stack.isEmpty()) {
 							stack = new ItemStack(
 									entry.getKey().getItemDropped(entry.getKey().getDefaultState(), rand, 0));
-							amount = amount * entry.getKey().quantityDropped(rand);
 						}
 						SimpleItemStack key = new SimpleItemStack(stack);
 						if (totalMaterials.get(key) != 0) {
@@ -127,8 +127,7 @@ public class GuiClaimBlock extends GuiContainer {
 			if (stack != ItemStack.EMPTY) {
 				mc.getTextureManager().bindTexture(GuiClaimBlock.SLOTS);
 				this.drawTexturedModalRect(i + 47 + (54 * (i2 % 4)), j + 35 + ((i2 / 4) * 18), 0, ySize, 18, 18);
-				drawString(fontRenderer,
-						"(" + tile.getInventory().getTotalMaterials().get(new SimpleItemStack(stack)) + ")",
+				drawString(fontRenderer, "" + tile.getInventory().getTotalMaterials().get(new SimpleItemStack(stack)),
 						i + 67 + (54 * (i2 % 4)), j + 40 + ((i2 / 4) * 18), -1);
 			}
 
@@ -136,10 +135,11 @@ public class GuiClaimBlock extends GuiContainer {
 
 		drawString(fontRenderer, "Plot Claimed for Schematic: ", i + 47, j - 5, -1);
 		drawString(fontRenderer,
-				WordUtils.capitalizeFully(
-						tile.getSchematic().getName().substring(0, tile.getSchematic().getName().lastIndexOf("-"))),
+				TextFormatting.BOLD + "" + TextFormatting.UNDERLINE
+						+ WordUtils.capitalizeFully(
+								tile.getSchematic().getName().replaceAll("[_-]", " ").replaceAll("\\d{4,}", "")),
 				i + 65, j + 7, -1);
-		drawString(fontRenderer, "Remaining Materials Required:", i + 47, j + 22, -1);
+		drawString(fontRenderer, "Remaining Required Materials:", i + 47, j + 22, -1);
 	}
 
 	private void drawScaledTexturedRect(int x, int y, float zLevel, int width, int height) {
