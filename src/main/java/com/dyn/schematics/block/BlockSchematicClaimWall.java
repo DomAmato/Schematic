@@ -2,29 +2,32 @@ package com.dyn.schematics.block;
 
 import com.dyn.schematics.reference.Reference;
 
+import net.minecraft.block.BlockHorizontal;
 import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.IBlockAccess;
+import net.minecraft.world.World;
 
 public class BlockSchematicClaimWall extends BlockSchematicClaim {
 	public BlockSchematicClaimWall() {
 		setRegistryName(Reference.MOD_ID, "schem_block_wall");
 		setUnlocalizedName("schem_block_wall");
-		setDefaultState(blockState.getBaseState().withProperty(BlockSchematicClaim.FACING, EnumFacing.NORTH));
+		setDefaultState(blockState.getBaseState().withProperty(BlockHorizontal.FACING, EnumFacing.NORTH));
 	}
 
 	@Override
 	protected BlockStateContainer createBlockState() {
-		return new BlockStateContainer(this, new IProperty[] { BlockSchematicClaim.FACING });
+		return new BlockStateContainer(this, new IProperty[] { BlockHorizontal.FACING });
 	}
 
 	@Override
 	public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess source, BlockPos pos) {
-		EnumFacing enumfacing = state.getValue(BlockSchematicClaim.FACING);
+		EnumFacing enumfacing = state.getValue(BlockHorizontal.FACING);
 		float f = 0.28125F;
 		float f1 = 0.78125F;
 		float f2 = 0.0F;
@@ -46,20 +49,24 @@ public class BlockSchematicClaimWall extends BlockSchematicClaim {
 	}
 
 	/**
-	 * Convert the BlockState into the correct metadata value
+	 * Convert the BlockStateContainer into the correct metadata value
 	 */
 	@Override
 	public int getMetaFromState(IBlockState state) {
-		return state.getValue(BlockSchematicClaim.FACING).getIndex();
+		return state.getValue(BlockHorizontal.FACING).getHorizontalIndex();
+	}
+
+	@Override
+	public IBlockState getStateForPlacement(World worldIn, BlockPos pos, EnumFacing facing, float hitX, float hitY,
+			float hitZ, int meta, EntityLivingBase placer) {
+		return getDefaultState().withProperty(BlockHorizontal.FACING, placer.getHorizontalFacing());
 	}
 
 	/**
-	 * Convert the given metadata into a BlockState for this Block
+	 * Convert the given metadata into a BlockStateContainer for this Block
 	 */
 	@Override
 	public IBlockState getStateFromMeta(int meta) {
-		EnumFacing enumfacing = EnumFacing.getFront(meta & 7);
-
-		return getDefaultState().withProperty(BlockSchematicClaim.FACING, enumfacing);
+		return getDefaultState().withProperty(BlockHorizontal.FACING, EnumFacing.getHorizontal(meta));
 	}
 }

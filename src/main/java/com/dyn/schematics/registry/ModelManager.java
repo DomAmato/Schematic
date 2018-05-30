@@ -5,11 +5,11 @@ import java.util.Set;
 import java.util.function.ToIntFunction;
 
 import com.dyn.schematics.SchematicMod;
-import com.dyn.schematics.block.BlockSchematicClaim;
 import com.dyn.schematics.block.BlockSchematicClaimStand;
 import com.dyn.schematics.reference.Reference;
 
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockHorizontal;
 import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.renderer.ItemMeshDefinition;
@@ -111,10 +111,10 @@ public class ModelManager {
 	private void registerBlockModels() {
 		registerVariantBlockItemModels(
 				SchematicMod.schematicBlockStand.getDefaultState().withProperty(BlockSchematicClaimStand.CEILING, true),
-				BlockSchematicClaim.FACING, EnumFacing::getIndex);
-		registerVariantBlockItemModels(SchematicMod.schematicBlockStand.getDefaultState().withProperty(
-				BlockSchematicClaimStand.CEILING, false), BlockSchematicClaim.FACING, EnumFacing::getIndex);
-		registerVariantBlockItemModels(SchematicMod.schematicBlockWall.getDefaultState(), BlockSchematicClaim.FACING,
+				BlockHorizontal.FACING, EnumFacing::getIndex);
+		registerVariantBlockItemModels(SchematicMod.schematicBlockStand.getDefaultState()
+				.withProperty(BlockSchematicClaimStand.CEILING, false), BlockHorizontal.FACING, EnumFacing::getIndex);
+		registerVariantBlockItemModels(SchematicMod.schematicBlockWall.getDefaultState(), BlockHorizontal.FACING,
 				EnumFacing::getIndex);
 		// registerItemModel(SchematicMod.desk.getItemBlock(), Reference.MOD_ID +
 		// ":architect_desk");

@@ -1,10 +1,10 @@
 package com.dyn.schematics.network.messages;
 
 import com.dyn.schematics.SchematicMod;
-import com.dyn.schematics.block.BlockSchematicClaim;
 import com.dyn.schematics.block.ClaimBlockTileEntity;
 
 import io.netty.buffer.ByteBuf;
+import net.minecraft.block.BlockHorizontal;
 import net.minecraft.init.Blocks;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
@@ -37,7 +37,7 @@ public class MessageBuildSchematicFromTileEntity implements IMessage {
 						((ClaimBlockTileEntity) tileentity).getSchematic().build(world,
 								((ClaimBlockTileEntity) tileentity).getSchematicPos(), message.getRotation(),
 								tileentity.getBlockType().getStateFromMeta(tileentity.getBlockMetadata())
-										.getValue(BlockSchematicClaim.FACING),
+										.getValue(BlockHorizontal.FACING),
 								ctx.getServerHandler().player);
 						((ClaimBlockTileEntity) tileentity).setActive(false);
 						world.setBlockState(message.getPos(), Blocks.AIR.getDefaultState(), 3);

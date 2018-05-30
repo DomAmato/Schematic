@@ -13,9 +13,9 @@ import com.dyn.schematics.registry.SchematicRenderingRegistry;
 import com.dyn.schematics.utils.SimpleItemStack;
 
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockHorizontal;
 import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.block.material.Material;
-import net.minecraft.block.properties.PropertyDirection;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
@@ -35,9 +35,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
-public class BlockSchematicClaim extends Block implements ITileEntityProvider {
-
-	public static final PropertyDirection FACING = PropertyDirection.create("facing", EnumFacing.Plane.HORIZONTAL);
+public class BlockSchematicClaim extends BlockHorizontal implements ITileEntityProvider {
 
 	protected BlockSchematicClaim() {
 		super(Material.WOOD);
@@ -59,7 +57,7 @@ public class BlockSchematicClaim extends Block implements ITileEntityProvider {
 
 	@Override
 	public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess source, BlockPos pos) {
-		EnumFacing enumfacing = state.getValue(BlockSchematicClaim.FACING);
+		EnumFacing enumfacing = state.getValue(BlockHorizontal.FACING);
 
 		switch (enumfacing) {
 		case EAST:
@@ -172,8 +170,8 @@ public class BlockSchematicClaim extends Block implements ITileEntityProvider {
 				&& ((ClaimBlockTileEntity) tileentity).isActive()) {
 			Minecraft.getMinecraft().addScheduledTask(() -> {
 				SchematicRenderingRegistry.addSchematic(((ClaimBlockTileEntity) tileentity).getSchematic(),
-						((ClaimBlockTileEntity) tileentity).getSchematicPos(),
-						state.getValue(BlockSchematicClaim.FACING), ((ClaimBlockTileEntity) tileentity).getRotation());
+						((ClaimBlockTileEntity) tileentity).getSchematicPos(), state.getValue(BlockHorizontal.FACING),
+						((ClaimBlockTileEntity) tileentity).getRotation());
 			});
 		}
 	}

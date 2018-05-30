@@ -7,13 +7,13 @@ import javax.annotation.Nullable;
 
 import com.dyn.schematics.Schematic;
 import com.dyn.schematics.SchematicMod;
-import com.dyn.schematics.block.BlockSchematicClaim;
 import com.dyn.schematics.block.BlockSchematicClaimStand;
 import com.dyn.schematics.block.ClaimBlockTileEntity;
 import com.dyn.schematics.reference.Reference;
 import com.dyn.schematics.registry.SchematicRegistry;
 import com.dyn.schematics.utils.SimpleItemStack;
 
+import net.minecraft.block.BlockHorizontal;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
@@ -177,13 +177,12 @@ public class ItemSchematic extends Item {
 					MathHelper.floor((((playerIn.rotationYaw + 180.0F) * 16.0F) / 360.0F) + 0.5D);
 					worldIn.setBlockState(pos,
 							SchematicMod.schematicBlockStand.getDefaultState()
-									.withProperty(BlockSchematicClaim.FACING,
-											playerIn.getHorizontalFacing().getOpposite())
+									.withProperty(BlockHorizontal.FACING, playerIn.getHorizontalFacing().getOpposite())
 									.withProperty(BlockSchematicClaimStand.CEILING, side == EnumFacing.DOWN),
 							3);
 				} else {
 					worldIn.setBlockState(pos, SchematicMod.schematicBlockWall.getDefaultState()
-							.withProperty(BlockSchematicClaim.FACING, side), 3);
+							.withProperty(BlockHorizontal.FACING, side), 3);
 				}
 
 				stack.shrink(1);
