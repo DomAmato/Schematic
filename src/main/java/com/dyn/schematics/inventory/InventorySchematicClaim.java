@@ -53,20 +53,22 @@ public class InventorySchematicClaim extends InventoryBasic {
 
 	public void loadMaterials(Schematic schem) {
 		int index = 0;
+		Random rand = new Random();
 		for (Entry<Block, Integer> entry : schem.getRequiredMaterials().entrySet()) {
 			ItemStack stack = new ItemStack(entry.getKey());
 			int amount = entry.getValue();
-			Random rand = new Random();
 			if (stack.isEmpty()) {
 				stack = new ItemStack(entry.getKey().getItemDropped(entry.getKey().getDefaultState(), rand, 0));
 				amount = amount * entry.getKey().quantityDropped(rand);
 			}
-			SimpleItemStack key = new SimpleItemStack(stack);
-			if (totalMaterials.containsKey(key)) {
-				totalMaterials.replace(key, totalMaterials.get(key) + amount);
-			} else {
-				setInventorySlotContents(index++, stack);
-				totalMaterials.put(key, amount);
+			if (!stack.isEmpty()) {
+				SimpleItemStack key = new SimpleItemStack(stack);
+				if (totalMaterials.containsKey(key)) {
+					totalMaterials.replace(key, totalMaterials.get(key) + amount);
+				} else {
+					setInventorySlotContents(index++, stack);
+					totalMaterials.put(key, amount);
+				}
 			}
 
 		}

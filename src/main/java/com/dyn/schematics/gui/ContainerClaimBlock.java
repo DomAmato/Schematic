@@ -101,17 +101,16 @@ public class ContainerClaimBlock extends Container {
 	 */
 	public void scrollTo(float pos) {
 		int i = ((tile.getSchematic().getRequiredMaterials().size() + 3) / 4) - 5;
-		int j = (int) (pos * i + 0.5D);
+		int j = (int) ((pos * i) + 0.5D);
 
 		if (j < 0) {
 			j = 0;
 		}
 
 		List<ItemStack> entries = Lists.newArrayList();
-
+		Random rand = new Random();
 		for (Block entry : tile.getSchematic().getRequiredMaterials().keySet()) {
 			ItemStack stack = new ItemStack(entry);
-			Random rand = new Random();
 			if (stack.isEmpty()) {
 				stack = new ItemStack(entry.getItemDropped(entry.getDefaultState(), rand, 0));
 			}
