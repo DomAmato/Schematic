@@ -3,13 +3,11 @@ package com.dyn.schematics.inventory;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Random;
 
 import com.dyn.schematics.Schematic;
 import com.dyn.schematics.utils.SimpleItemStack;
 import com.google.common.collect.Maps;
 
-import net.minecraft.block.Block;
 import net.minecraft.inventory.InventoryBasic;
 import net.minecraft.item.ItemStack;
 
@@ -17,8 +15,13 @@ public class InventorySchematicClaim extends InventoryBasic {
 
 	private Map<SimpleItemStack, Integer> totalMaterials = Maps.newHashMap();;
 
-	public InventorySchematicClaim(String name, int slots) {
-		super(name, true, slots);
+	public InventorySchematicClaim(Schematic schematic) {
+		super(schematic.getName(), true, schematic.getRequiredMaterials().size());
+		totalMaterials = schematic.getRequiredMaterials();
+		int index = 0;
+		for (SimpleItemStack material : totalMaterials.keySet()) {
+			setInventorySlotContents(index++, material.getVanillStack());
+		}
 	}
 
 	@Override
@@ -49,29 +52,6 @@ public class InventorySchematicClaim extends InventoryBasic {
 
 	public Map<SimpleItemStack, Integer> getTotalMaterials() {
 		return totalMaterials;
-	}
-
-	public void loadMaterials(Schematic schem) {
-		int index = 0;
-		Random rand = new Random();
-		for (Entry<Block, Integer> entry : schem.getRequiredMaterials().entrySet()) {
-			ItemStack stack = new ItemStack(entry.getKey());
-			int amount = entry.getValue();
-			if (stack.isEmpty()) {
-				stack = new ItemStack(entry.getKey().getItemDropped(entry.getKey().getDefaultState(), rand, 0));
-				amount = amount * entry.getKey().quantityDropped(rand);
-			}
-			if (!stack.isEmpty()) {
-				SimpleItemStack key = new SimpleItemStack(stack);
-				if (totalMaterials.containsKey(key)) {
-					totalMaterials.replace(key, totalMaterials.get(key) + amount);
-				} else {
-					setInventorySlotContents(index++, stack);
-					totalMaterials.put(key, amount);
-				}
-			}
-
-		}
 	}
 
 	public void setAmountRemaining(SimpleItemStack index, int amount) {

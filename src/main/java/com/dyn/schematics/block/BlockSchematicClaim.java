@@ -209,19 +209,12 @@ public class BlockSchematicClaim extends Block implements ITileEntityProvider {
 							// empty schematic
 							Block.spawnAsEntity(world, pos, is);
 
-							for (Entry<Block, Integer> entry : ((ClaimBlockTileEntity) tileentity).getSchematic()
-									.getRequiredMaterials().entrySet()) {
-								ItemStack stack = new ItemStack(entry.getKey());
-								Random rand = new Random();
-								if (stack.isEmpty()) {
-									stack = new ItemStack(
-											entry.getKey().getItemDropped(entry.getKey().getDefaultState(), rand, 0));
-								}
-								SimpleItemStack key = new SimpleItemStack(stack);
+							for (Entry<SimpleItemStack, Integer> entry : ((ClaimBlockTileEntity) tileentity)
+									.getSchematic().getRequiredMaterials().entrySet()) {
 								int diff = entry.getValue() - ((ClaimBlockTileEntity) tileentity).getInventory()
-										.getTotalMaterials().get(key);
+										.getTotalMaterials().get(entry.getKey());
 								InventoryHelper.spawnItemStack(world, pos.getX(), pos.getY(), pos.getZ(),
-										new ItemStack(key.getItem(), diff));
+										new ItemStack(entry.getKey().getItem(), diff));
 							}
 						} else {
 							Block.spawnAsEntity(world, pos, new ItemStack(SchematicMod.schematic));

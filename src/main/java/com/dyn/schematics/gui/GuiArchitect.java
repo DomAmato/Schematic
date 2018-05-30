@@ -11,8 +11,8 @@ import com.dyn.schematics.Schematic;
 import com.dyn.schematics.network.NetworkManager;
 import com.dyn.schematics.network.messages.MessageUpdateSchematicNBT;
 import com.dyn.schematics.registry.SchematicRegistry;
+import com.dyn.schematics.utils.SimpleItemStack;
 
-import net.minecraft.block.Block;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.renderer.BufferBuilder;
@@ -22,6 +22,7 @@ import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.inventory.Slot;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TextFormatting;
@@ -108,15 +109,15 @@ public class GuiArchitect extends GuiContainer {
 				fontRenderer.drawString(TextFormatting.WHITE + "" + TextFormatting.BOLD + schematic.getName(),
 						(i * 2) - (fontRenderer.getStringWidth(schematic.getName()) / 2), j, 14737632);
 				int counter = 0;
-				Map<Block, Integer> materials = schematic.getRequiredMaterials();
+				Map<SimpleItemStack, Integer> materials = schematic.getRequiredMaterials();
 
-				for (Entry<Block, Integer> block : materials.entrySet()) {
+				for (Entry<SimpleItemStack, Integer> material : materials.entrySet()) {
 					if (counter > 5) {
 						fontRenderer.drawString("Etc...", i, j + 15 + (10 * (counter + 1)), 14737632);
 						break;
 					}
-					String renderS = TextFormatting.WHITE + block.getKey().getLocalizedName() + TextFormatting.RESET
-							+ ": " + TextFormatting.WHITE + block.getValue();
+					String renderS = TextFormatting.WHITE + new ItemStack(material.getKey().getItem()).getDisplayName()
+							+ TextFormatting.RESET + ": " + TextFormatting.WHITE + material.getValue();
 					fontRenderer.drawString(renderS, i, j + 15 + (10 * (counter + 1)), 14737632);
 					counter++;
 				}

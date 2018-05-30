@@ -1,5 +1,6 @@
 package com.dyn.schematics.block;
 
+import java.util.Map.Entry;
 import java.util.UUID;
 
 import com.dyn.schematics.Schematic;
@@ -9,7 +10,6 @@ import com.dyn.schematics.utils.SimpleItemStack;
 
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
-import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.network.NetworkManager;
@@ -88,9 +88,10 @@ public class ClaimBlockTileEntity extends TileEntity {
 				NBTTagCompound itemtag = nbttaglist.getCompoundTagAt(i);
 				int slot = itemtag.getByte("Slot") & 0xFF;
 				int remaining = itemtag.getInteger("Remaining");
+				SimpleItemStack sis = new SimpleItemStack(itemtag);
+				inventory.setAmountRemaining(sis, remaining);
 				if ((slot >= 0) && (slot < inventory.getSizeInventory())) {
-					inventory.setInventorySlotContents(slot, new ItemStack(itemtag));
-					inventory.setAmountRemaining(new SimpleItemStack(new ItemStack(itemtag)), remaining);
+					inventory.setInventorySlotContents(slot, sis.getVanillStack());
 				}
 			}
 		}
@@ -113,8 +114,7 @@ public class ClaimBlockTileEntity extends TileEntity {
 	public void setSchematic(Schematic schematic, BlockPos pos) {
 		this.schematic = schematic;
 		schem_pos = pos;
-		inventory = new InventorySchematicClaim(schematic.getName(), schematic.getRequiredMaterials().size());
-		inventory.loadMaterials(schematic);
+		inventory = new InventorySchematicClaim(schematic);
 	}
 
 	public void setSchematicPos(BlockPos schem_pos) {
@@ -142,15 +142,13 @@ public class ClaimBlockTileEntity extends TileEntity {
 			// compound.setBoolean("active", active);
 			compound.setInteger("rot", rotation);
 			NBTTagList nbttaglist = new NBTTagList();
-			for (int i = 0; i < inventory.getSizeInventory(); i++) {
-				if (inventory.getStackInSlot(i) != null) {
-					NBTTagCompound itemtag = new NBTTagCompound();
-					itemtag.setByte("Slot", (byte) i);
-					inventory.getStackInSlot(i).writeToNBT(itemtag);
-					itemtag.setInteger("Remaining",
-							inventory.getTotalMaterials().get(new SimpleItemStack(inventory.getStackInSlot(i))));
-					nbttaglist.appendTag(itemtag);
-				}
+			int index = 0;
+			for (Entry<SimpleItemStack, Integer> material : inventory.getTotalMaterials().entrySet()) {
+				NBTTagCompound itemtag = new NBTTagCompound();
+				itemtag.setByte("Slot", (byte) index);
+				material.getKey().writeToNBT(itemtag);
+				itemtag.setInteger("Remaining", material.getValue());
+				nbttaglist.appendTag(itemtag);
 			}
 			compound.setTag("Items", nbttaglist);
 		}

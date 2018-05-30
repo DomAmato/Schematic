@@ -1,7 +1,6 @@
 package com.dyn.schematics.item;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 
 import javax.annotation.Nullable;
@@ -13,8 +12,8 @@ import com.dyn.schematics.block.BlockSchematicClaimStand;
 import com.dyn.schematics.block.ClaimBlockTileEntity;
 import com.dyn.schematics.reference.Reference;
 import com.dyn.schematics.registry.SchematicRegistry;
+import com.dyn.schematics.utils.SimpleItemStack;
 
-import net.minecraft.block.Block;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
@@ -68,22 +67,17 @@ public class ItemSchematic extends Item {
 
 			Schematic schem = new Schematic(schemName, nbttagcompound);
 
-			Map<Block, Integer> materials = schem.getRequiredMaterials();
-
-			for (Entry<Block, Integer> block : materials.entrySet()) {
+			for (Entry<SimpleItemStack, Integer> material : schem.getRequiredMaterials().entrySet()) {
 				if (counter > 5) {
 					tooltip.add("Etc...");
 					break;
 				}
 
-				String name = block.getKey().getLocalizedName();
-				if (name.contains(".name")) {
-					ItemStack is = new ItemStack(block.getKey());
-					name = is.getDisplayName();
-				}
+				ItemStack is = new ItemStack(material.getKey().getItem());
+				String name = is.getDisplayName();
 
 				tooltip.add(TextFormatting.GOLD + name + TextFormatting.RESET + ": " + TextFormatting.GRAY
-						+ block.getValue());
+						+ material.getValue());
 				counter++;
 			}
 		}

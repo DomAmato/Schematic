@@ -2,13 +2,11 @@ package com.dyn.schematics.gui;
 
 import java.util.List;
 import java.util.Map.Entry;
-import java.util.Random;
 
 import com.dyn.schematics.block.ClaimBlockTileEntity;
 import com.dyn.schematics.utils.SimpleItemStack;
 import com.google.common.collect.Lists;
 
-import net.minecraft.block.Block;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.inventory.ClickType;
 import net.minecraft.inventory.Container;
@@ -108,13 +106,8 @@ public class ContainerClaimBlock extends Container {
 		}
 
 		List<ItemStack> entries = Lists.newArrayList();
-		Random rand = new Random();
-		for (Block entry : tile.getSchematic().getRequiredMaterials().keySet()) {
-			ItemStack stack = new ItemStack(entry);
-			if (stack.isEmpty()) {
-				stack = new ItemStack(entry.getItemDropped(entry.getDefaultState(), rand, 0));
-			}
-			entries.add(stack);
+		for (SimpleItemStack entry : tile.getSchematic().getRequiredMaterials().keySet()) {
+			entries.add(entry.getVanillStack());
 		}
 
 		for (int row = 0; row < 7; ++row) {

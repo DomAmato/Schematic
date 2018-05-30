@@ -3,7 +3,6 @@ package com.dyn.schematics.gui;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Random;
 
 import org.apache.commons.lang3.text.WordUtils;
 import org.lwjgl.input.Mouse;
@@ -16,7 +15,6 @@ import com.dyn.schematics.network.messages.MessageBuildSchematicFromTileEntity;
 import com.dyn.schematics.registry.SchematicRenderingRegistry;
 import com.dyn.schematics.utils.SimpleItemStack;
 
-import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.inventory.GuiContainer;
@@ -69,19 +67,13 @@ public class GuiClaimBlock extends GuiContainer {
 					mc.player.closeScreen();
 				} else {
 					Map<SimpleItemStack, Integer> totalMaterials = tile.getInventory().getTotalMaterials();
-					Random rand = new Random();
-					for (Entry<Block, Integer> entry : tile.getSchematic().getRequiredMaterials().entrySet()) {
-						ItemStack stack = new ItemStack(entry.getKey());
-
-						if (stack.isEmpty()) {
-							stack = new ItemStack(
-									entry.getKey().getItemDropped(entry.getKey().getDefaultState(), rand, 0));
-						}
-						SimpleItemStack key = new SimpleItemStack(stack);
-						if (totalMaterials.get(key) != 0) {
+					for (Entry<SimpleItemStack, Integer> entry : tile.getSchematic().getRequiredMaterials()
+							.entrySet()) {
+						ItemStack stack = new ItemStack(entry.getKey().getItem());
+						if (totalMaterials.get(entry.getKey()) != 0) {
 							Minecraft.getMinecraft().player.sendMessage(
 									new TextComponentString("Not all materials have been supplied, missing: "
-											+ totalMaterials.get(key) + " " + stack.getDisplayName()));
+											+ totalMaterials.get(entry.getKey()) + " " + stack.getDisplayName()));
 							mc.player.closeScreen();
 							return;
 						}

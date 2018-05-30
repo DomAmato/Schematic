@@ -13,6 +13,7 @@ import java.util.Set;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import com.dyn.schematics.utils.SimpleItemStack;
 import com.google.common.collect.Maps;
 
 import net.minecraft.block.Block;
@@ -155,7 +156,7 @@ public class Schematic {
 	private short[] blockIds;
 
 	private byte[] metadata;
-	Map<Block, Integer> reqMaterial = Maps.newHashMap();
+	Map<SimpleItemStack, Integer> reqMaterial = Maps.newHashMap();
 	private int materialCost = 0;
 
 	public Schematic(String name) {
@@ -302,7 +303,7 @@ public class Schematic {
 		return name;
 	}
 
-	public Map<Block, Integer> getRequiredMaterials() {
+	public Map<SimpleItemStack, Integer> getRequiredMaterials() {
 		return Schematic.sortByValue(reqMaterial);
 	}
 
@@ -460,23 +461,28 @@ public class Schematic {
 				continue;
 			}
 
+			int amount = 1;
 			ItemStack stack = new ItemStack(b, 1, meta);
 			if (stack.isEmpty()) {
 				stack = new ItemStack(b.getItemDropped(b.getDefaultState(), rand, 0));
 				// this likely means the material can't be placed in an inventory
+				amount = b.quantityDropped(rand);
 				if (stack.isEmpty()) {
 					continue;
 				}
 			}
-			if (reqMaterial.containsKey(state.getBlock())) {
-				reqMaterial.replace(state.getBlock(), reqMaterial.get(state.getBlock()) + 1);
+			stack.setItemDamage(0);
+			SimpleItemStack key = new SimpleItemStack(stack);
+
+			if (reqMaterial.containsKey(key)) {
+				reqMaterial.replace(key, reqMaterial.get(key) + amount);
 			} else {
-				reqMaterial.put(state.getBlock(), 1);
+				reqMaterial.put(key, amount);
 			}
 		}
 
 		materialCost = 0;
-		for (Entry<Block, Integer> material : reqMaterial.entrySet()) {
+		for (Entry<SimpleItemStack, Integer> material : reqMaterial.entrySet()) {
 			materialCost += material.getValue();
 		}
 	}
