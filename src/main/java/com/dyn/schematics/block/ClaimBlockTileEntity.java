@@ -95,7 +95,9 @@ public class ClaimBlockTileEntity extends TileEntity {
 				}
 			}
 		}
-		placer = compound.getUniqueId("placer");
+		if (compound.hasKey("placer")) {
+			placer = compound.getUniqueId("placer");
+		}
 		rotation = compound.getInteger("rot");
 	}
 
@@ -152,7 +154,9 @@ public class ClaimBlockTileEntity extends TileEntity {
 			}
 			compound.setTag("Items", nbttaglist);
 		}
-		compound.setUniqueId("placer", placer);
+		if (placer != null) {
+			compound.setUniqueId("placer", placer);
+		}
 		return compound;
 	}
 }
