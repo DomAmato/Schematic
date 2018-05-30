@@ -457,7 +457,7 @@ public class Schematic {
 			int meta = metadata[i];
 
 			IBlockState state = b.getStateFromMeta(meta);
-			if (state.getBlock() == Blocks.AIR) {
+			if ((state.getBlock() == Blocks.AIR) || (state.getBlock() == Blocks.BARRIER)) {
 				continue;
 			}
 
