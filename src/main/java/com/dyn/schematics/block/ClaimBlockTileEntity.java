@@ -116,7 +116,9 @@ public class ClaimBlockTileEntity extends TileEntity {
 	public void setSchematic(Schematic schematic, BlockPos pos) {
 		this.schematic = schematic;
 		schem_pos = pos;
-		inventory = new InventorySchematicClaim(schematic);
+		if ((inventory == null) || (inventory.getSizeInventory() != schematic.getRequiredMaterials().size())) {
+			inventory = new InventorySchematicClaim(schematic);
+		}
 	}
 
 	public void setSchematicPos(BlockPos schem_pos) {
@@ -147,7 +149,7 @@ public class ClaimBlockTileEntity extends TileEntity {
 			int index = 0;
 			for (Entry<SimpleItemStack, Integer> material : inventory.getTotalMaterials().entrySet()) {
 				NBTTagCompound itemtag = new NBTTagCompound();
-				itemtag.setByte("Slot", (byte) index);
+				itemtag.setByte("Slot", (byte) index++);
 				material.getKey().writeToNBT(itemtag);
 				itemtag.setInteger("Remaining", material.getValue());
 				nbttaglist.appendTag(itemtag);
