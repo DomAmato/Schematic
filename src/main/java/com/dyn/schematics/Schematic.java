@@ -174,15 +174,13 @@ public class Schematic {
 		}
 
 		// the translation values are length for E/W and width for N/S on E/W
-		// sides
-		// and the inverse for the N/S sides
+		// sides and the inverse for the N/S sides
 		switch (facing) {
 		case EAST:
 			rotation++;
 			start = start.west(length);
 			break;
 		case NORTH:
-			rotation--;
 			break;
 		case SOUTH:
 			rotation += 2;
@@ -194,8 +192,9 @@ public class Schematic {
 			break;
 		default:
 			break;
-
 		}
+
+		rotation %= 4;
 
 		if (getSize() < 100000) {
 			sender.sendMessage(new TextComponentString("Building Schematic: " + name));
@@ -348,6 +347,7 @@ public class Schematic {
 	// wont place right
 	public void place(World world, BlockPos start, int rotation, int x, int y, int z, boolean flag) {
 		int i = xyzToIndex(x, y, z);
+
 		Block b = Block.getBlockById(blockIds[i]);
 		if ((b == null) || (flag && !b.getDefaultState().isFullBlock() && (b != Blocks.AIR))
 				|| (!flag && (b.getDefaultState().isFullBlock() || (b == Blocks.AIR)))) {

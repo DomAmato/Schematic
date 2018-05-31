@@ -34,10 +34,10 @@ public class MessageBuildSchematicFromTileEntity implements IMessage {
 						// Item.getItemFromBlock(material.getKey()), -1, material.getValue(), null);
 						// }
 						// }
+
 						((ClaimBlockTileEntity) tileentity).getSchematic().build(world,
 								((ClaimBlockTileEntity) tileentity).getSchematicPos(), message.getRotation(),
-								tileentity.getBlockType().getStateFromMeta(tileentity.getBlockMetadata())
-										.getValue(BlockHorizontal.FACING),
+								world.getBlockState(message.getPos()).getValue(BlockHorizontal.FACING),
 								ctx.getServerHandler().player);
 						((ClaimBlockTileEntity) tileentity).setActive(false);
 						world.setBlockState(message.getPos(), Blocks.AIR.getDefaultState(), 3);
