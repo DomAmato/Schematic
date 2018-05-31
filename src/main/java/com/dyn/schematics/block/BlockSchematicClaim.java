@@ -32,6 +32,7 @@ import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.IBlockAccess;
 import net.minecraft.world.World;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -183,7 +184,9 @@ public class BlockSchematicClaim extends BlockHorizontal implements ITileEntityP
 		boolean result = true;
 		if ((tileentity instanceof ClaimBlockTileEntity)) {
 			if (!world.isRemote) {
-				if ((world.getPlayerEntityByUUID(((ClaimBlockTileEntity) tileentity).getPlacer()) != player)
+				if (FMLCommonHandler.instance().getMinecraftServerInstance().getPlayerList()
+						.canSendCommands(player.getGameProfile())
+						&& (world.getPlayerEntityByUUID(((ClaimBlockTileEntity) tileentity).getPlacer()) != player)
 						&& (player.getUniqueID() != ((ClaimBlockTileEntity) tileentity).getPlacer())) {
 					result = false;
 					player.sendMessage(new TextComponentString("Cannot break other players claimed plots"));
