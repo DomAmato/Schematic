@@ -123,6 +123,7 @@ public class SchematicRenderer {
 	}
 
 	public static void renderCompiledSchematic(int id, BlockPos offset) {
+		Minecraft.getMinecraft().mcProfiler.startSection("schematics");
 		GlStateManager.pushMatrix();
 		RenderHelper.enableStandardItemLighting();
 		GlStateManager.translate(offset.getX() - TileEntityRendererDispatcher.staticPlayerX,
@@ -142,5 +143,6 @@ public class SchematicRenderer {
 		RenderHelper.disableStandardItemLighting();
 		// GlStateManager.translate(-1.0f, 0.0f, -1.0f);
 		GlStateManager.popMatrix();
+		Minecraft.getMinecraft().mcProfiler.endSection();
 	}
 }
