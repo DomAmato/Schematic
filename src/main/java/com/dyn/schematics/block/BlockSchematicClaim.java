@@ -106,7 +106,8 @@ public class BlockSchematicClaim extends BlockHorizontal implements ITileEntityP
 	public ItemStack getPickBlock(IBlockState state, RayTraceResult target, World world, BlockPos pos,
 			EntityPlayer player) {
 		TileEntity tileentity = world.getTileEntity(pos);
-		if (tileentity instanceof ClaimBlockTileEntity) {
+		if ((tileentity instanceof ClaimBlockTileEntity)
+				&& (((ClaimBlockTileEntity) tileentity).getSchematic() != null)) {
 			ItemStack is = new ItemStack(SchematicMod.schematic);
 			NBTTagCompound compound = new NBTTagCompound();
 			((ClaimBlockTileEntity) tileentity).getSchematic().writeToNBT(compound);
