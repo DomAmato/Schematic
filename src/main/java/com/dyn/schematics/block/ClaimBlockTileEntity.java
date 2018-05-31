@@ -95,7 +95,7 @@ public class ClaimBlockTileEntity extends TileEntity {
 				}
 			}
 		}
-		if (compound.hasKey("placer")) {
+		if (compound.hasUniqueId("placer")) {
 			placer = compound.getUniqueId("placer");
 		}
 		rotation = compound.getInteger("rot");
