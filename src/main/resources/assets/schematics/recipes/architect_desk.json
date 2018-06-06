@@ -8,15 +8,15 @@
 	"key": {
 		"P": {
 			"item": "minecraft:planks",
-      		"data": 0
+			"data" : 32767
 		},
 		"S": {
 			"item": "minecraft:stick",
-      		"data": 0
+			"data" : 32767
 		},
 		"L": {
 			"item": "minecraft:wooden_slab",
-      		"data": 0
+			"data" : 32767
 		}
 	},
 	"result": {
