@@ -11,6 +11,7 @@ import com.dyn.schematics.SchematicMod;
 import com.dyn.schematics.item.ItemSchematic;
 import com.dyn.schematics.network.NetworkManager;
 import com.dyn.schematics.network.messages.MessageSaveSchematicToClient;
+import com.dyn.schematics.reference.ModConfig;
 
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
@@ -66,7 +67,7 @@ public class CommandSaveSchematic extends CommandBase {
 
 		int size = width * height * length;
 
-		if (size > (SchematicMod.max_size * 2)) {
+		if (size > (ModConfig.getConfig().max_size * 2)) {
 			throw new CommandException("Schematic is too large to save", new Object[0]);
 		}
 		World world = sender.getEntityWorld();

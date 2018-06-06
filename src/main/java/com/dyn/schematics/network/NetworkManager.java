@@ -2,7 +2,8 @@ package com.dyn.schematics.network;
 
 import com.dyn.schematics.network.messages.MessageBuildSchematicFromTileEntity;
 import com.dyn.schematics.network.messages.MessageSaveSchematicToClient;
-import com.dyn.schematics.network.messages.MessageUpdateSchematicNBT;
+import com.dyn.schematics.network.messages.MessageSyncConfig;
+import com.dyn.schematics.network.messages.MessageUpdateArchitectDesk;
 import com.dyn.schematics.reference.Reference;
 
 import net.minecraft.entity.player.EntityPlayer;
@@ -58,10 +59,13 @@ public class NetworkManager {
 		// Server
 		NetworkManager.registerMessage(MessageBuildSchematicFromTileEntity.class,
 				MessageBuildSchematicFromTileEntity.Handler.class, Side.SERVER);
-		NetworkManager.registerMessage(MessageUpdateSchematicNBT.class, MessageUpdateSchematicNBT.Handler.class,
+		NetworkManager.registerMessage(MessageUpdateArchitectDesk.class, MessageUpdateArchitectDesk.Handler.class,
 				Side.SERVER);
+
+		// Client
 		NetworkManager.registerMessage(MessageSaveSchematicToClient.class, MessageSaveSchematicToClient.Handler.class,
 				Side.CLIENT);
+		NetworkManager.registerMessage(MessageSyncConfig.class, MessageSyncConfig.Handler.class, Side.CLIENT);
 
 	}
 

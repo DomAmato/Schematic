@@ -8,10 +8,10 @@ import org.apache.commons.lang3.text.WordUtils;
 import org.lwjgl.input.Mouse;
 import org.lwjgl.opengl.GL11;
 
-import com.dyn.schematics.SchematicMod;
 import com.dyn.schematics.block.ClaimBlockTileEntity;
 import com.dyn.schematics.network.NetworkManager;
 import com.dyn.schematics.network.messages.MessageBuildSchematicFromTileEntity;
+import com.dyn.schematics.reference.ModConfig;
 import com.dyn.schematics.registry.SchematicRenderingRegistry;
 import com.dyn.schematics.utils.SimpleItemStack;
 
@@ -58,9 +58,9 @@ public class GuiClaimBlock extends GuiContainer {
 	@Override
 	protected void actionPerformed(GuiButton button) throws IOException {
 		if (button.id == 0) {
-			if (SchematicMod.can_build) {
+			if (ModConfig.getConfig().can_build) {
 				if ((Minecraft.getMinecraft().playerController.getCurrentGameType() == GameType.CREATIVE)
-						|| !SchematicMod.req_resources) {
+						|| !ModConfig.getConfig().req_resources) {
 					NetworkManager.sendToServer(new MessageBuildSchematicFromTileEntity(tile.getPos(),
 							SchematicRenderingRegistry.getSchematicRotation(tile.getSchematic())));
 					SchematicRenderingRegistry.removeSchematic(tile.getSchematic());

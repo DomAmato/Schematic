@@ -2,6 +2,7 @@ package com.dyn.schematics.network.messages;
 
 import com.dyn.schematics.SchematicMod;
 import com.dyn.schematics.block.ClaimBlockTileEntity;
+import com.dyn.schematics.reference.ModConfig;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.block.BlockHorizontal;
@@ -19,21 +20,12 @@ public class MessageBuildSchematicFromTileEntity implements IMessage {
 	public static class Handler implements IMessageHandler<MessageBuildSchematicFromTileEntity, IMessage> {
 		@Override
 		public IMessage onMessage(final MessageBuildSchematicFromTileEntity message, final MessageContext ctx) {
-			if (SchematicMod.can_build) {
+			if (ModConfig.getConfig().can_build) {
 				SchematicMod.proxy.addScheduledTask(() -> {
 					World world = ctx.getServerHandler().player.getEntityWorld();
 					TileEntity tileentity = world.getTileEntity(message.getPos());
 					if ((tileentity instanceof ClaimBlockTileEntity)
 							&& (((ClaimBlockTileEntity) tileentity).getSchematic() != null)) {
-						// if (!ctx.getServerHandler().player.capabilities.isCreativeMode &&
-						// SchematicMod.req_resources) {
-						// for (Entry<Block, Integer> material : ((ClaimBlockTileEntity)
-						// tileentity).getSchematic()
-						// .getRequiredMaterials().entrySet()) {
-						// ctx.getServerHandler().player.inventory.clearMatchingItems(
-						// Item.getItemFromBlock(material.getKey()), -1, material.getValue(), null);
-						// }
-						// }
 
 						((ClaimBlockTileEntity) tileentity).getSchematic().build(world,
 								((ClaimBlockTileEntity) tileentity).getSchematicPos(), message.getRotation(),

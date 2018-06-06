@@ -11,6 +11,7 @@ import org.lwjgl.opengl.GL11;
 
 import com.dyn.schematics.Schematic;
 import com.dyn.schematics.SchematicMod;
+import com.dyn.schematics.reference.ModConfig;
 import com.dyn.schematics.renderer.SchematicRenderer;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -36,7 +37,7 @@ public class SchematicRenderingRegistry {
 	private static List<Triple<Schematic, BlockPos, Pair<EnumFacing, Integer>>> toCompile = Lists.newArrayList();
 
 	public static void addSchematic(Schematic schematic, BlockPos offset, EnumFacing face, int rotation) {
-		if (schematic.getSize() < SchematicMod.max_size) {
+		if (schematic.getSize() < ModConfig.getConfig().max_size) {
 			if (SchematicRenderingRegistry.compiledSchematics.containsKey(schematic.getName())) {
 				// if we already compiled this schematic with the same offset
 				// and rotation dont add it again

@@ -9,6 +9,7 @@ import com.dyn.schematics.Schematic;
 import com.dyn.schematics.SchematicMod;
 import com.dyn.schematics.block.BlockSchematicClaimStand;
 import com.dyn.schematics.block.ClaimBlockTileEntity;
+import com.dyn.schematics.reference.ModConfig;
 import com.dyn.schematics.reference.Reference;
 import com.dyn.schematics.registry.SchematicRegistry;
 import com.dyn.schematics.utils.SimpleItemStack;
@@ -123,7 +124,7 @@ public class ItemSchematic extends Item {
 			items.add(new ItemStack(this, 1, 0));
 			for (String schemName : SchematicRegistry.enumerateSchematics()) {
 				Schematic schem = SchematicRegistry.load(schemName);
-				if ((schem != null) && (schem.getSize() < SchematicMod.max_size)) {
+				if ((schem != null) && (schem.getSize() < ModConfig.getConfig().max_size)) {
 					NBTTagCompound compound = new NBTTagCompound();
 					schem.writeToNBT(compound);
 					compound.setString("title", schemName);

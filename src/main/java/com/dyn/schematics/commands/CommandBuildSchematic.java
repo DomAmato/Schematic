@@ -1,8 +1,8 @@
 package com.dyn.schematics.commands;
 
 import com.dyn.schematics.Schematic;
-import com.dyn.schematics.SchematicMod;
 import com.dyn.schematics.item.ItemSchematic;
+import com.dyn.schematics.reference.ModConfig;
 import com.dyn.schematics.registry.SchematicRegistry;
 
 import net.minecraft.command.CommandBase;
@@ -33,7 +33,7 @@ public class CommandBuildSchematic extends CommandBase {
 
 	@Override
 	public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
-		if (!SchematicMod.can_build) {
+		if (!ModConfig.getConfig().can_build) {
 			throw new CommandException("Building from schematics now allowed", new Object[0]);
 		}
 		if (args.length < 1) {
