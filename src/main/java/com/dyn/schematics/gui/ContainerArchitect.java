@@ -1,9 +1,13 @@
 package com.dyn.schematics.gui;
 
+import java.util.List;
+
 import com.dyn.schematics.Schematic;
 import com.dyn.schematics.SchematicMod;
+import com.dyn.schematics.registry.SchematicRegistry;
 
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Items;
 import net.minecraft.inventory.Container;
 import net.minecraft.inventory.IContainerListener;
@@ -13,6 +17,7 @@ import net.minecraft.inventory.InventoryCraftResult;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.network.play.server.SPacketSetSlot;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
@@ -30,9 +35,13 @@ public class ContainerArchitect extends Container {
 	private final BlockPos selfPosition;
 	/** The maximum cost of repairing/renaming in the anvil. */
 	public int cost;
-	private String schematicName;
-	/** The player that has this container open. */
-	private NBTTagCompound nbtTag;
+	private List<String> schem_list;
+	private Schematic schematic;
+	private ItemStack outputStack = ItemStack.EMPTY;
+
+	private int schem_index = 0;
+
+	private EntityPlayer player;
 
 	@SideOnly(Side.CLIENT)
 	public ContainerArchitect(EntityPlayer player, World worldIn) {
@@ -42,6 +51,7 @@ public class ContainerArchitect extends Container {
 	public ContainerArchitect(EntityPlayer player, final World worldIn, final BlockPos blockPosIn) {
 		outputSlot = new InventoryCraftResult();
 		player.inventory.openInventory(player);
+		this.player = player;
 		inputSlots = new InventoryBasic("Achitect", true, 2) {
 			/**
 			 * For tile entities, ensures the chunk containing the tile entity is saved to
@@ -121,6 +131,7 @@ public class ContainerArchitect extends Container {
 			addSlotToContainer(new Slot(player.inventory, k, 8 + (k * 18), 169));
 		}
 		cost = 0;
+		schem_list = SchematicRegistry.enumerateSchematics();
 	}
 
 	@Override
@@ -133,6 +144,18 @@ public class ContainerArchitect extends Container {
 	public boolean canInteractWith(EntityPlayer playerIn) {
 		return playerIn.getDistanceSq(selfPosition.getX() + 0.5D, selfPosition.getY() + 0.5D,
 				selfPosition.getZ() + 0.5D) <= 16.0D;
+	}
+
+	public Schematic getSchematic() {
+		if (!ItemStack.areItemStacksEqualUsingNBTShareTag(outputStack, outputSlot.getStackInSlot(0))) {
+			if (outputSlot.getStackInSlot(0).hasTagCompound()) {
+				NBTTagCompound compound = outputSlot.getStackInSlot(0).getTagCompound();
+				schematic = new Schematic(compound.getString("title"), compound);
+				cost = MathHelper.clamp(schematic.getTotalMaterialCost() / 500, 1, 64);
+			}
+			outputStack = outputSlot.getStackInSlot(0);
+		}
+		return schematic;
 	}
 
 	/**
@@ -205,9 +228,20 @@ public class ContainerArchitect extends Container {
 	/**
 	 * used by the Anvil GUI to update the Item Name being typed by the player
 	 */
-	public void updateSchematicContents(String newName, NBTTagCompound tag) {
-		schematicName = newName;
-		nbtTag = tag;
+	public void updateSchematicContents(boolean next) {
+		if (!schem_list.isEmpty()) {
+			if (next) {
+				schem_index++;
+				schem_index %= schem_list.size();
+				schem_index = Math.max(schem_index, 0);
+			} else {
+				schem_index--;
+				if (schem_index < 0) {
+					schem_index = Math.max(schem_list.size() - 1, 0);
+				}
+			}
+			schematic = SchematicRegistry.load(schem_list.get(schem_index));
+		}
 
 		updateSchematicOutput();
 	}
@@ -224,18 +258,22 @@ public class ContainerArchitect extends Container {
 			cost = 0;
 		} else {
 			ItemStack itemstack1 = itemstack.copy();
-			// we should change the name to the currently selected schematic, how do we do
-			// that
-			if (nbtTag != null) {
-				nbtTag.setString("title", schematicName);
-				Schematic schem = new Schematic(schematicName, nbtTag);
+			if (schematic == null) {
+				outputSlot.setInventorySlotContents(0, new ItemStack(SchematicMod.schematic));
+			} else {
 				itemstack1 = new ItemStack(SchematicMod.schematic);
-				itemstack1.setTagCompound(nbtTag);
-				cost = MathHelper.clamp(schem.getTotalMaterialCost() / 500, 1, 64);
+				NBTTagCompound nbtTag = new NBTTagCompound();
+				nbtTag.setString("title", schematic.getName());
+				itemstack1.setTagCompound(schematic.writeToNBT(nbtTag));
+				cost = MathHelper.clamp(schematic.getTotalMaterialCost() / 500, 1, 64);
+				outputSlot.setInventorySlotContents(0, itemstack1);
 			}
-			outputSlot.setInventorySlotContents(0, itemstack1);
-
-			detectAndSendChanges();
+			// Client Only
+			if (world.isRemote) {
+				detectAndSendChanges();
+			} else {
+				((EntityPlayerMP) player).connection.sendPacket(new SPacketSetSlot(windowId, 2, itemstack1));
+			}
 		}
 	}
 }

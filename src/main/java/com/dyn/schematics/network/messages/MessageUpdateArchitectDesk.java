@@ -5,48 +5,46 @@ import com.dyn.schematics.gui.ContainerArchitect;
 
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.player.EntityPlayerMP;
-import net.minecraft.nbt.NBTTagCompound;
-import net.minecraftforge.fml.common.network.ByteBufUtils;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessageHandler;
 import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
-public class MessageUpdateSchematicNBT implements IMessage {
+public class MessageUpdateArchitectDesk implements IMessage {
 
-	public static class Handler implements IMessageHandler<MessageUpdateSchematicNBT, IMessage> {
+	public static class Handler implements IMessageHandler<MessageUpdateArchitectDesk, IMessage> {
 		@Override
-		public IMessage onMessage(final MessageUpdateSchematicNBT message, final MessageContext ctx) {
+		public IMessage onMessage(final MessageUpdateArchitectDesk message, final MessageContext ctx) {
 			SchematicMod.proxy.addScheduledTask(() -> {
 				EntityPlayerMP player = ctx.getServerHandler().player;
 				ContainerArchitect desk = (ContainerArchitect) player.openContainer;
-				desk.updateSchematicContents(message.getTag().getString("title"), message.getTag());
+				desk.updateSchematicContents(message.getDir());
 
 			});
 			return null;
 		}
 	}
 
-	private NBTTagCompound tag;
+	private boolean direction;
 
-	public MessageUpdateSchematicNBT() {
+	public MessageUpdateArchitectDesk() {
 	}
 
-	public MessageUpdateSchematicNBT(NBTTagCompound tag) {
-		this.tag = tag;
+	public MessageUpdateArchitectDesk(boolean direction) {
+		this.direction = direction;
 	}
 
 	@Override
 	public void fromBytes(ByteBuf buf) {
-		tag = ByteBufUtils.readTag(buf);
+		direction = buf.readBoolean();
 	}
 
-	public NBTTagCompound getTag() {
-		return tag;
+	public boolean getDir() {
+		return direction;
 	}
 
 	@Override
 	public void toBytes(ByteBuf buf) {
-		ByteBufUtils.writeTag(buf, tag);
+		buf.writeBoolean(direction);
 	}
 
 }

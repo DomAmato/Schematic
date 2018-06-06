@@ -1,7 +1,6 @@
 package com.dyn.schematics.gui;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -9,11 +8,12 @@ import org.lwjgl.opengl.GL11;
 
 import com.dyn.schematics.Schematic;
 import com.dyn.schematics.network.NetworkManager;
-import com.dyn.schematics.network.messages.MessageUpdateSchematicNBT;
-import com.dyn.schematics.registry.SchematicRegistry;
+import com.dyn.schematics.network.messages.MessageUpdateArchitectDesk;
+import com.dyn.schematics.reference.ModConfig;
 import com.dyn.schematics.utils.SimpleItemStack;
 
 import net.minecraft.client.gui.Gui;
+import net.minecraft.client.gui.GuiButton;
 import net.minecraft.client.gui.inventory.GuiContainer;
 import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.GlStateManager;
@@ -21,9 +21,7 @@ import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
-import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraft.world.World;
@@ -43,19 +41,22 @@ public class GuiArchitect extends GuiContainer {
 
 	private final ContainerArchitect desk;
 	private final InventoryPlayer playerInventory;
-	private int index = 0;
-	private Schematic schematic;
-	private List<String> schem_list;
+	private boolean useLocal;
 
 	public GuiArchitect(EntityPlayer player, World worldIn) {
 		super(new ContainerArchitect(player, worldIn));
 		playerInventory = player.inventory;
-
 		desk = (ContainerArchitect) inventorySlots;
-		schem_list = SchematicRegistry.enumerateSchematics();
-		if (!schem_list.isEmpty()) {
-			schematic = SchematicRegistry.load(schem_list.get(0));
-		}
+	}
+
+	/**
+	 * Called by the controls from the buttonList when activated. (Mouse pressed for
+	 * buttons)
+	 */
+	@Override
+	protected void actionPerformed(GuiButton button) throws IOException {
+		button.displayString = button.displayString == "Local" ? "Remote" : "Local";
+		useLocal = button.displayString == "Local";
 	}
 
 	/**
@@ -70,9 +71,6 @@ public class GuiArchitect extends GuiContainer {
 		mc.getTextureManager().bindTexture(GuiArchitect.PLANK);
 		this.drawTexturedModalRect((int) (i - (xSize * .25)), j, 0, 0, (int) (xSize * 1.5), ySize);
 		if (desk.getSlot(0).getHasStack()) {
-			// int shiftVal = (255 << 24); //the alpha value
-			// int val = (9489145+shiftVal); //the rgb value as an int
-			// Gui.drawRect(i, j+35, i+xSize, j+ySize - 35, val);
 			mc.getTextureManager().bindTexture(GuiArchitect.SCHEM);
 			drawScaledTexturedRect(i, j - 16, zLevel, xSize, ySize + 16);
 			mc.getTextureManager().bindTexture(GuiArchitect.ICON_OVERLAY_LOCATION);
@@ -82,6 +80,11 @@ public class GuiArchitect extends GuiContainer {
 			drawTexturedModalRect((int) (i - (xSize * .2)), (j + (ySize / 2)) - 16, 32,
 					isInsideArea(mouseX, mouseY, (int) (i - (xSize * .2)), (j + (ySize / 2)) - 16, 32, 32) ? 32 : 0, 32,
 					32);
+		}
+		if (ModConfig.getConfig().can_use_client_schematic) {
+			drawTexturedModalRect((int) (i + (xSize * 1.05)), (j + (ySize / 2)) - 16, 0,
+					isInsideArea(mouseX, mouseY, (int) (i + (xSize * 1.05)), (j + (ySize / 2)) - 16, 32, 32) ? 32 : 0,
+					32, 32);
 		}
 		mc.getTextureManager().bindTexture(GuiArchitect.DARK_PLANK);
 		this.drawTexturedModalRect(i - 5, (int) (j + (ySize * .85)), 0, 0, xSize + 10, (int) (ySize * .14));
@@ -102,7 +105,7 @@ public class GuiArchitect extends GuiContainer {
 		if (desk.getSlot(0).getHasStack()) {
 			GlStateManager.disableLighting();
 			GlStateManager.disableBlend();
-
+			Schematic schematic = desk.getSchematic();
 			if (schematic != null) {
 				int i = 45;
 				int j = 30;
@@ -121,6 +124,13 @@ public class GuiArchitect extends GuiContainer {
 					fontRenderer.drawString(renderS, i, j + 15 + (10 * (counter + 1)), 14737632);
 					counter++;
 				}
+			} else {
+				int i = 45;
+				int j = 30;
+				fontRenderer.drawString(TextFormatting.WHITE + "" + TextFormatting.BOLD + "Choose the Schematic",
+						(i * 2) - (fontRenderer.getStringWidth("Choose the Schematic") / 2), j, -1);
+				fontRenderer.drawString(TextFormatting.WHITE + "< Press the buttons to cycle >",
+						(i * 2) - (fontRenderer.getStringWidth("< Press the buttons to cycle >") / 2), j + 45, -1);
 			}
 
 			if (desk.cost > 0) {
@@ -185,6 +195,12 @@ public class GuiArchitect extends GuiContainer {
 	 */
 	@Override
 	public void initGui() {
+		if (ModConfig.getConfig().can_use_client_schematic) {
+			int i = (width - xSize) / 2;
+			int j = (height - ySize) / 2;
+			buttonList.add(new GuiButton(0, i + 170, j + 5, 40, 20, "Local"));
+			useLocal = true;
+		}
 		super.initGui();
 
 	}
@@ -200,43 +216,21 @@ public class GuiArchitect extends GuiContainer {
 	protected void mouseClicked(int mouseX, int mouseY, int mouseButton) throws IOException {
 		super.mouseClicked(mouseX, mouseY, mouseButton);
 		if (desk.getSlot(0).getHasStack()) {
-			if (!schem_list.isEmpty()) {
-				int i = (width - xSize) / 2;
-				int j = (height - ySize) / 2;
+			int i = (width - xSize) / 2;
+			int j = (height - ySize) / 2;
+			if (ModConfig.getConfig().can_use_client_schematic && useLocal) {
 				if (isInsideArea(mouseX, mouseY, (int) (i - (xSize * .2)), (j + (ySize / 2)) - 16, 32, 32)) {
-					index--;
-					if (index < 0) {
-						index = Math.max(schem_list.size() - 1, 0);
-					}
-					schematic = SchematicRegistry.load(schem_list.get(index));
-					updateSchematic();
+					desk.updateSchematicContents(false);
 				} else if (isInsideArea(mouseX, mouseY, (int) (i + (xSize * 1.05)), (j + (ySize / 2)) - 16, 32, 32)) {
-					index++;
-					index %= schem_list.size();
-					index = Math.max(index, 0);
-					schematic = SchematicRegistry.load(schem_list.get(index));
-					updateSchematic();
+					desk.updateSchematicContents(true);
+				}
+			} else {
+				if (isInsideArea(mouseX, mouseY, (int) (i - (xSize * .2)), (j + (ySize / 2)) - 16, 32, 32)) {
+					NetworkManager.sendToServer(new MessageUpdateArchitectDesk(false));
+				} else if (isInsideArea(mouseX, mouseY, (int) (i + (xSize * 1.05)), (j + (ySize / 2)) - 16, 32, 32)) {
+					NetworkManager.sendToServer(new MessageUpdateArchitectDesk(true));
 				}
 			}
-		}
-	}
-
-	private void updateSchematic() {
-		String s = schematic.getName();
-		Slot slot = desk.getSlot(0);
-
-		if ((slot != null) && slot.getHasStack() && !slot.getStack().hasDisplayName()
-				&& s.equals(slot.getStack().getDisplayName())) {
-			s = "";
-		}
-		if (schematic.getSize() < 10000) {
-			// a packet can only contain 32kb which any large schematic will easily eclipse
-			NBTTagCompound tag = schematic.writeToNBT(new NBTTagCompound());
-			desk.updateSchematicContents(s, tag);
-			tag.setString("title", s);
-			NetworkManager.sendToServer(new MessageUpdateSchematicNBT(tag));
-		} else {
-
 		}
 	}
 }
