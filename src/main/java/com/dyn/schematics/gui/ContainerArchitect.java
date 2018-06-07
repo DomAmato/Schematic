@@ -1,10 +1,12 @@
 package com.dyn.schematics.gui;
 
 import java.util.List;
+import java.util.Map.Entry;
 
 import com.dyn.schematics.Schematic;
 import com.dyn.schematics.SchematicMod;
 import com.dyn.schematics.registry.SchematicRegistry;
+import com.dyn.schematics.utils.SimpleItemStack;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -17,6 +19,7 @@ import net.minecraft.inventory.InventoryCraftResult;
 import net.minecraft.inventory.Slot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
 import net.minecraft.network.play.server.SPacketSetSlot;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
@@ -264,6 +267,20 @@ public class ContainerArchitect extends Container {
 				itemstack1 = new ItemStack(SchematicMod.schematic);
 				NBTTagCompound nbtTag = new NBTTagCompound();
 				nbtTag.setString("title", schematic.getName());
+				nbtTag.setInteger("cost", schematic.getTotalMaterialCost());
+				NBTTagList materials = new NBTTagList();
+				int counter = 0;
+				for (Entry<SimpleItemStack, Integer> material : schematic.getRequiredMaterials().entrySet()) {
+					if (counter > 5) {
+						break;
+					}
+					NBTTagCompound mat_tag = new NBTTagCompound();
+					mat_tag.setString("name", material.getKey().getVanillStack().getDisplayName());
+					mat_tag.setInteger("total", material.getValue());
+					materials.appendTag(mat_tag);
+					counter++;
+				}
+				nbtTag.setTag("com_mat", materials);
 				itemstack1.setTagCompound(schematic.writeToNBT(nbtTag));
 				cost = MathHelper.clamp(schematic.getTotalMaterialCost() / 500, 1, 64);
 				outputSlot.setInventorySlotContents(0, itemstack1);

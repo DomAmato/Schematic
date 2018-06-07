@@ -4,6 +4,7 @@ import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Map.Entry;
 import java.util.regex.Pattern;
 
 import com.dyn.schematics.Schematic;
@@ -12,6 +13,7 @@ import com.dyn.schematics.item.ItemSchematic;
 import com.dyn.schematics.network.NetworkManager;
 import com.dyn.schematics.network.messages.MessageSaveSchematicToClient;
 import com.dyn.schematics.reference.ModConfig;
+import com.dyn.schematics.utils.SimpleItemStack;
 
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
@@ -22,6 +24,7 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompressedStreamTools;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -86,14 +89,44 @@ public class CommandSaveSchematic extends CommandBase {
 			throw new CommandException("Failed writing schematic to file", new Object[0]);
 		}
 
+		Schematic schem = new Schematic(name.split(Pattern.quote("."))[0], nbt);
+		
 		ItemStack stack = CommandBase.getCommandSenderAsPlayer(sender).getHeldItemMainhand();
 		if (stack.getItem() instanceof ItemSchematic) {
 			nbt.setString("title", name.split(Pattern.quote("."))[0]);
+			nbt.setInteger("cost", schem.getTotalMaterialCost());
+			NBTTagList materials = new NBTTagList();
+			int counter = 0;
+			for (Entry<SimpleItemStack, Integer> material : schem.getRequiredMaterials().entrySet()) {
+				if (counter > 5) {
+					break;
+				}
+				NBTTagCompound mat_tag = new NBTTagCompound();
+				mat_tag.setString("name", material.getKey().getVanillStack().getDisplayName());
+				mat_tag.setInteger("total", material.getValue());
+				materials.appendTag(mat_tag);
+				counter++;
+			}
+			nbt.setTag("com_mat", materials);
 			stack.setTagCompound(nbt);
 		} else {
 			stack = CommandBase.getCommandSenderAsPlayer(sender).getHeldItemOffhand();
 			if (stack.getItem() instanceof ItemSchematic) {
 				nbt.setString("title", name.split(Pattern.quote("."))[0]);
+				nbt.setInteger("cost", schem.getTotalMaterialCost());
+				NBTTagList materials = new NBTTagList();
+				int counter = 0;
+				for (Entry<SimpleItemStack, Integer> material : schem.getRequiredMaterials().entrySet()) {
+					if (counter > 5) {
+						break;
+					}
+					NBTTagCompound mat_tag = new NBTTagCompound();
+					mat_tag.setString("name", material.getKey().getVanillStack().getDisplayName());
+					mat_tag.setInteger("total", material.getValue());
+					materials.appendTag(mat_tag);
+					counter++;
+				}
+				nbt.setTag("com_mat", materials);
 				stack.setTagCompound(nbt);
 			} else {
 				throw new CommandException("Must have schematic item equipped", new Object[0]);

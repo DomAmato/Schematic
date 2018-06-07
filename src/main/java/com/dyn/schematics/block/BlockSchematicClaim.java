@@ -23,6 +23,7 @@ import net.minecraft.inventory.InventoryHelper;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
@@ -113,7 +114,20 @@ public class BlockSchematicClaim extends BlockHorizontal implements ITileEntityP
 			((ClaimBlockTileEntity) tileentity).getSchematic().writeToNBT(compound);
 			compound.setString("title", ((ClaimBlockTileEntity) tileentity).getSchematic().getName()
 					.replace("" + ((ClaimBlockTileEntity) tileentity).getSchematicPos().toLong(), ""));
-
+			compound.setInteger("cost", ((ClaimBlockTileEntity) tileentity).getSchematic().getTotalMaterialCost());
+			NBTTagList materials = new NBTTagList();
+			int counter = 0;
+			for (Entry<SimpleItemStack, Integer> material : ((ClaimBlockTileEntity) tileentity).getSchematic().getRequiredMaterials().entrySet()) {
+				if (counter > 5) {
+					break;
+				}
+				NBTTagCompound mat_tag = new NBTTagCompound();
+				mat_tag.setString("name", material.getKey().getVanillStack().getDisplayName());
+				mat_tag.setInteger("total", material.getValue());
+				materials.appendTag(mat_tag);
+				counter++;
+			}
+			compound.setTag("com_mat", materials);
 			is.setTagCompound(compound);
 			return is;
 		} else {
@@ -199,13 +213,26 @@ public class BlockSchematicClaim extends BlockHorizontal implements ITileEntityP
 			if (result) {
 				if (!world.isRemote) {
 					if (willHarvest) {
-						if ((((ClaimBlockTileEntity) tileentity).getSchematic() != null)) {
+						if (((ClaimBlockTileEntity) tileentity).getSchematic() != null) {
 							ItemStack is = new ItemStack(SchematicMod.schematic);
 							NBTTagCompound compound = new NBTTagCompound();
 							((ClaimBlockTileEntity) tileentity).getSchematic().writeToNBT(compound);
 							compound.setString("title", ((ClaimBlockTileEntity) tileentity).getSchematic().getName()
 									.replace("" + ((ClaimBlockTileEntity) tileentity).getSchematicPos().toLong(), ""));
-
+							compound.setInteger("cost", ((ClaimBlockTileEntity) tileentity).getSchematic().getTotalMaterialCost());
+							NBTTagList materials = new NBTTagList();
+							int counter = 0;
+							for (Entry<SimpleItemStack, Integer> material : ((ClaimBlockTileEntity) tileentity).getSchematic().getRequiredMaterials().entrySet()) {
+								if (counter > 5) {
+									break;
+								}
+								NBTTagCompound mat_tag = new NBTTagCompound();
+								mat_tag.setString("name", material.getKey().getVanillStack().getDisplayName());
+								mat_tag.setInteger("total", material.getValue());
+								materials.appendTag(mat_tag);
+								counter++;
+							}
+							compound.setTag("com_mat", materials);
 							is.setTagCompound(compound);
 							// we have to do this here otherwise it spawns in an
 							// empty schematic
@@ -215,8 +242,9 @@ public class BlockSchematicClaim extends BlockHorizontal implements ITileEntityP
 									.getSchematic().getRequiredMaterials().entrySet()) {
 								int diff = entry.getValue() - ((ClaimBlockTileEntity) tileentity).getInventory()
 										.getTotalMaterials().get(entry.getKey());
-								InventoryHelper.spawnItemStack(world, pos.getX(), pos.getY(), pos.getZ(),
-										new ItemStack(entry.getKey().getItem(), diff));
+								ItemStack spawn_is = entry.getKey().getVanillStack();
+								spawn_is.setCount(diff);
+								InventoryHelper.spawnItemStack(world, pos.getX(), pos.getY(), pos.getZ(), spawn_is);
 							}
 						} else {
 							Block.spawnAsEntity(world, pos, new ItemStack(SchematicMod.schematic));
