@@ -1,4 +1,6 @@
-package com.dyn.schematics;
+package com.dyn.schematics.utils;
+
+import com.dyn.schematics.SchematicMod;
 
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.item.ItemStack;

@@ -14,6 +14,7 @@ import com.dyn.schematics.network.NetworkManager;
 import com.dyn.schematics.proxy.Proxy;
 import com.dyn.schematics.reference.ModConfig;
 import com.dyn.schematics.reference.Reference;
+import com.dyn.schematics.utils.SchematicsTab;
 
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
