@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import com.dyn.schematics.Schematic;
+import com.dyn.schematics.reference.ModConfig;
 import com.dyn.schematics.utils.SimpleItemStack;
 import com.google.common.collect.Maps;
 
@@ -17,7 +18,8 @@ public class InventorySchematicClaim extends InventoryBasic {
 
 	public InventorySchematicClaim(Schematic schematic) {
 		super(schematic.getName(), true, schematic.getRequiredMaterials().size());
-		totalMaterials = schematic.getRequiredMaterials();
+		totalMaterials.putAll(schematic.getRequiredMaterials());
+		totalMaterials = Schematic.sortByValue(totalMaterials);
 		int index = 0;
 		for (SimpleItemStack material : totalMaterials.keySet()) {
 			setInventorySlotContents(index++, material.getVanillStack());
@@ -26,14 +28,28 @@ public class InventorySchematicClaim extends InventoryBasic {
 
 	@Override
 	public ItemStack addItem(ItemStack itemstack) {
-		for (int i = 0; i < getSizeInventory(); ++i) {
-			SimpleItemStack itemstack1 = new SimpleItemStack(getStackInSlot(i));
-
-			if (itemstack1.getItem() == itemstack.getItem()) {
-				int j = Math.min(itemstack.getCount(), totalMaterials.get(itemstack1));
+		if (ModConfig.getConfig().req_exact) {
+			// Checks if the metadata is equal as well
+			SimpleItemStack meta_key = new SimpleItemStack(itemstack);
+			if(totalMaterials.containsKey(meta_key)) {
+				int j = Math.min(itemstack.getCount(), totalMaterials.get(meta_key));
 
 				if (j > 0) {
-					totalMaterials.replace(itemstack1, totalMaterials.get(itemstack1) - j);
+					totalMaterials.replace(meta_key, totalMaterials.get(meta_key) - j);
+					itemstack.shrink(j);
+
+					if (itemstack.isEmpty()) {
+						return ItemStack.EMPTY;
+					}
+				}
+			}
+		} else {
+			SimpleItemStack key = new SimpleItemStack(itemstack.getItem(), 0);
+			if(totalMaterials.containsKey(key)) {
+				int j = Math.min(itemstack.getCount(), totalMaterials.get(key));
+
+				if (j > 0) {
+					totalMaterials.replace(key, totalMaterials.get(key) - j);
 					itemstack.shrink(j);
 
 					if (itemstack.isEmpty()) {

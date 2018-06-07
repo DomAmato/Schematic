@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map.Entry;
 
 import com.dyn.schematics.block.ClaimBlockTileEntity;
+import com.dyn.schematics.reference.ModConfig;
 import com.dyn.schematics.utils.SimpleItemStack;
 import com.google.common.collect.Lists;
 
@@ -58,7 +59,10 @@ public class ContainerClaimBlock extends Container {
 				 */
 				@Override
 				public boolean isItemValid(ItemStack stack) {
-					return super.isItemValid(stack) && (stack.getItem() == entry.getKey().getItem());
+					return super.isItemValid(stack) && ModConfig.getConfig().req_exact
+							? entry.getKey().equals(new SimpleItemStack(stack)) // Checks if the meta data is equal as
+																				// well
+							: (stack.getItem() == entry.getKey().getItem());
 				}
 
 			});

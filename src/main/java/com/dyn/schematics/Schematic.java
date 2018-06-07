@@ -13,10 +13,16 @@ import java.util.Set;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import com.dyn.schematics.reference.ModConfig;
 import com.dyn.schematics.utils.SimpleItemStack;
 import com.google.common.collect.Maps;
 
 import net.minecraft.block.Block;
+import net.minecraft.block.BlockDoublePlant;
+import net.minecraft.block.BlockLeaves;
+import net.minecraft.block.BlockSkull;
+import net.minecraft.block.BlockSlab;
+import net.minecraft.block.BlockTallGrass;
 import net.minecraft.block.ITileEntityProvider;
 import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.properties.PropertyDirection;
@@ -178,17 +184,29 @@ public class Schematic {
 		switch (facing) {
 		case EAST:
 			rotation++;
-			start = start.west(length);
+			if ((rotation % 2) == 1) {
+				start = start.west(length);
+			} else {
+				start = start.west(width);
+			}
 			break;
 		case NORTH:
 			break;
 		case SOUTH:
 			rotation += 2;
-			start = start.west(width).north(length);
+			if ((rotation % 2) == 1) {
+				start = start.west(length).north(width);
+			} else {
+				start = start.west(width).north(length);
+			}
 			break;
 		case WEST:
 			rotation += 3;
-			start = start.north(width);
+			if ((rotation % 2) == 1) {
+				start = start.north(width);
+			} else {
+				start = start.north(length);
+			}
 			break;
 		default:
 			break;
@@ -303,7 +321,7 @@ public class Schematic {
 	}
 
 	public Map<SimpleItemStack, Integer> getRequiredMaterials() {
-		return Schematic.sortByValue(reqMaterial);
+		return reqMaterial;
 	}
 
 	public int getSize() {
@@ -366,7 +384,7 @@ public class Schematic {
 		IBlockState state = b.getStateFromMeta(metadata[i]);
 		state = rotationState(state, rotation);
 		world.setBlockState(pos, state, 3);
-		if (state.getBlock() instanceof ITileEntityProvider) {
+		if (b instanceof ITileEntityProvider) {
 			TileEntity tile = world.getTileEntity(pos);
 			if (tile != null) {
 				NBTTagCompound comp = getTileEntityTag(x, y, z, pos);
@@ -448,30 +466,34 @@ public class Schematic {
 		Random rand = new Random();
 		for (int i = 0; i < blockIds.length; i++) {
 			Block b = Block.getBlockById(blockIds[i]);
-			if (b == null) {
+			if ((b == null) || (b == Blocks.AIR) || (b == Blocks.BARRIER) || (b instanceof BlockLeaves)
+					|| (b == Blocks.BEDROCK) || (b instanceof BlockTallGrass) || (b instanceof BlockDoublePlant)
+					|| (b instanceof BlockSkull) || (b == Blocks.MOB_SPAWNER)) {
 				continue;
 			}
+
 			if ((b == Blocks.GRASS) || (b == Blocks.GRASS_PATH)) {
 				b = Blocks.DIRT;
 			}
-			int meta = metadata[i];
 
-			IBlockState state = b.getStateFromMeta(meta);
-			if ((state.getBlock() == Blocks.AIR) || (state.getBlock() == Blocks.BARRIER)) {
-				continue;
-			}
+			int meta = metadata[i];
 
 			int amount = 1;
 			ItemStack stack = new ItemStack(b, 1, meta);
-			if (stack.isEmpty()) {
-				stack = new ItemStack(b.getItemDropped(b.getDefaultState(), rand, 0));
+
+			if (stack.isEmpty() || (b instanceof BlockSlab)) {
+				IBlockState state = b.getStateFromMeta(meta);
+				stack = new ItemStack(b.getItemDropped(state, rand, 0), 1, b.damageDropped(state));
 				// this likely means the material can't be placed in an inventory
 				amount = b.quantityDropped(rand);
 				if (stack.isEmpty()) {
 					continue;
 				}
 			}
-			stack.setItemDamage(0);
+
+			if (!ModConfig.getConfig().req_exact || !stack.getHasSubtypes()) {
+				stack.setItemDamage(0);
+			}
 			SimpleItemStack key = new SimpleItemStack(stack);
 
 			if (reqMaterial.containsKey(key)) {
@@ -480,6 +502,8 @@ public class Schematic {
 				reqMaterial.put(key, amount);
 			}
 		}
+
+		reqMaterial = Schematic.sortByValue(reqMaterial);
 
 		materialCost = 0;
 		for (Entry<SimpleItemStack, Integer> material : reqMaterial.entrySet()) {
