@@ -1,5 +1,6 @@
 package com.dyn.schematics.reference;
 
+import net.minecraft.item.Item;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraftforge.common.config.Config;
 import net.minecraftforge.common.config.Config.Comment;
@@ -22,9 +23,13 @@ public class ModConfig {
 		@Name("Require Exact Resources")
 		public boolean req_exact = false;
 
-		@Comment("Allow schematics on the client machine to appear in the architect desk")
+		@Comment("Allow schematics on the client machine to appear in the architect desk (does nto work currently)")
 		@Name("Allow schematics from client")
 		public boolean can_use_client_schematic = true;
+
+		@Comment("Change which item to use as currency for the architect desk")
+		@Name("Minecraft Item")
+		public String currency = "minecraft:gold_ingot";
 
 		@Comment("The max number of blocks renderable by a schematic, this drops the framerate when very large schematics are rendered (client only)")
 		@Name("Max Render Size")
@@ -47,6 +52,10 @@ public class ModConfig {
 		ModConfig.config.can_use_client_schematic = compound.getBoolean("client");
 		ModConfig.config.req_resources = compound.getBoolean("resource");
 		ModConfig.config.req_exact = compound.getBoolean("exact");
+		ModConfig.config.currency = compound.getString("currency");
+		if (Item.getByNameOrId(ModConfig.config.currency) == null) {
+			ModConfig.config.currency = "minecraft:gold_ingot";
+		}
 	}
 
 	public static void setUseLocalConfig(boolean state) {
@@ -59,6 +68,7 @@ public class ModConfig {
 		ModConfig.localConfig.req_resources = ModConfig.config.req_resources;
 		ModConfig.localConfig.req_exact = ModConfig.config.req_exact;
 		ModConfig.localConfig.max_size = ModConfig.config.max_size;
+		ModConfig.localConfig.currency = ModConfig.config.currency;
 	}
 
 	public static NBTTagCompound writeConfigToNBT() {
@@ -67,6 +77,7 @@ public class ModConfig {
 		compound.setBoolean("client", ModConfig.config.can_use_client_schematic);
 		compound.setBoolean("resource", ModConfig.config.req_resources);
 		compound.setBoolean("exact", ModConfig.config.req_exact);
+		compound.setString("currency", ModConfig.config.currency);
 		return compound;
 
 	}

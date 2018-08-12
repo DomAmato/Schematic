@@ -5,6 +5,7 @@ import java.util.Map.Entry;
 
 import com.dyn.schematics.Schematic;
 import com.dyn.schematics.SchematicMod;
+import com.dyn.schematics.reference.ModConfig;
 import com.dyn.schematics.registry.SchematicRegistry;
 import com.dyn.schematics.utils.SimpleItemStack;
 
@@ -17,6 +18,7 @@ import net.minecraft.inventory.IInventory;
 import net.minecraft.inventory.InventoryBasic;
 import net.minecraft.inventory.InventoryCraftResult;
 import net.minecraft.inventory.Slot;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
@@ -56,15 +58,19 @@ public class ContainerArchitect extends Container {
 		player.inventory.openInventory(player);
 		this.player = player;
 		inputSlots = new InventoryBasic("Achitect", true, 2) {
+
 			/**
-			 * For tile entities, ensures the chunk containing the tile entity is saved to
-			 * disk later - the game won't think it hasn't changed and skip it.
+			 * Sets the given item stack to the specified slot in the inventory (can be
+			 * crafting or armor sections).
 			 */
 			@Override
-			public void markDirty() {
-				super.markDirty();
-				ContainerArchitect.this.onCraftMatrixChanged(this);
+			public void setInventorySlotContents(int index, ItemStack stack) {
+				super.setInventorySlotContents(index, stack);
+				if (index == 0) {
+					updateSchematicOutput();
+				}
 			}
+
 		};
 		selfPosition = blockPosIn;
 		world = worldIn;
@@ -88,11 +94,15 @@ public class ContainerArchitect extends Container {
 			 */
 			@Override
 			public boolean isItemValid(ItemStack stack) {
-				return super.isItemValid(stack) && (stack.getItem() == Items.GOLD_INGOT) && !getHasStack();
+				if (Item.getByNameOrId(ModConfig.getConfig().currency) == null) {
+					ModConfig.getConfig().currency = Items.GOLD_INGOT.getRegistryName().toString();
+				}
+				return super.isItemValid(stack)
+						&& (stack.getItem() == Item.getByNameOrId(ModConfig.getConfig().currency));
 			}
 
 		});
-		addSlotToContainer(new Slot(outputSlot, 2, 190, 120) {
+		addSlotToContainer(new Slot(outputSlot, 0, 190, 120) {
 			/**
 			 * Return whether this slot's stack can be taken from this slot.
 			 */
@@ -114,16 +124,7 @@ public class ContainerArchitect extends Container {
 			@Override
 			public ItemStack onTake(EntityPlayer thePlayer, ItemStack stack) {
 
-				inputSlots.setInventorySlotContents(0, ItemStack.EMPTY);
-
-				ItemStack itemstack = inputSlots.getStackInSlot(1);
-
-				if (!itemstack.isEmpty() && (itemstack.getCount() > Schematic.getCost(stack))) {
-					itemstack.shrink(Schematic.getCost(stack));
-					inputSlots.setInventorySlotContents(1, itemstack);
-				} else {
-					inputSlots.setInventorySlotContents(1, ItemStack.EMPTY);
-				}
+				applyCost(Schematic.getCost(stack));
 
 				return stack;
 			}
@@ -141,6 +142,19 @@ public class ContainerArchitect extends Container {
 	public void addListener(IContainerListener listener) {
 		super.addListener(listener);
 		listener.sendWindowProperty(this, 0, cost);
+	}
+
+	public void applyCost(int cost) {
+		inputSlots.setInventorySlotContents(0, ItemStack.EMPTY);
+
+		ItemStack itemstack = inputSlots.getStackInSlot(1);
+
+		if (itemstack.getCount() > cost) {
+			itemstack.shrink(cost);
+			inputSlots.setInventorySlotContents(1, itemstack);
+		} else {
+			inputSlots.setInventorySlotContents(1, ItemStack.EMPTY);
+		}
 	}
 
 	@Override
@@ -174,18 +188,6 @@ public class ContainerArchitect extends Container {
 	}
 
 	/**
-	 * Callback for when the crafting matrix is changed.
-	 */
-	@Override
-	public void onCraftMatrixChanged(IInventory inventoryIn) {
-		super.onCraftMatrixChanged(inventoryIn);
-
-		if (inventoryIn == inputSlots) {
-			updateSchematicOutput();
-		}
-	}
-
-	/**
 	 * Handle when the stack in slot {@code index} is shift-clicked. Normally this
 	 * moves the stack between the player inventory and the other inventory(s).
 	 */
@@ -199,16 +201,17 @@ public class ContainerArchitect extends Container {
 			itemstack = itemstack1.copy();
 
 			if (index == 2) {
-				if (!mergeItemStack(itemstack1, 3, 39, true)) {
+				if (!mergeItemStack(itemstack1, 3, 12, true)) {
 					return ItemStack.EMPTY;
 				}
 
 				slot.onSlotChange(itemstack1, itemstack);
+				applyCost(cost);
 			} else if ((index != 0) && (index != 1)) {
-				if ((index >= 3) && (index < 39) && !mergeItemStack(itemstack1, 0, 2, false)) {
+				if ((index >= 3) && (index < 12) && !mergeItemStack(itemstack1, 0, 2, false)) {
 					return ItemStack.EMPTY;
 				}
-			} else if (!mergeItemStack(itemstack1, 3, 39, false)) {
+			} else if (!mergeItemStack(itemstack1, 3, 12, false)) {
 				return ItemStack.EMPTY;
 			}
 
@@ -261,11 +264,12 @@ public class ContainerArchitect extends Container {
 			cost = 0;
 		} else {
 			ItemStack itemstack1 = itemstack.copy();
+			NBTTagCompound nbtTag = new NBTTagCompound();
 			if (schematic == null) {
 				outputSlot.setInventorySlotContents(0, new ItemStack(SchematicMod.schematic));
 			} else {
 				itemstack1 = new ItemStack(SchematicMod.schematic);
-				NBTTagCompound nbtTag = new NBTTagCompound();
+
 				nbtTag.setString("title", schematic.getName());
 				nbtTag.setInteger("cost", schematic.getTotalMaterialCost());
 				NBTTagList materials = new NBTTagList();
@@ -285,10 +289,8 @@ public class ContainerArchitect extends Container {
 				cost = MathHelper.clamp(schematic.getTotalMaterialCost() / 500, 1, 64);
 				outputSlot.setInventorySlotContents(0, itemstack1);
 			}
-			// Client Only
-			if (world.isRemote) {
-				detectAndSendChanges();
-			} else {
+			detectAndSendChanges();
+			if (!world.isRemote) {
 				((EntityPlayerMP) player).connection.sendPacket(new SPacketSetSlot(windowId, 2, itemstack1));
 			}
 		}
