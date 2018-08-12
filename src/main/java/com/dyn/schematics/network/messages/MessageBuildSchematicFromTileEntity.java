@@ -30,7 +30,7 @@ public class MessageBuildSchematicFromTileEntity implements IMessage {
 						((ClaimBlockTileEntity) tileentity).getSchematic().build(world,
 								((ClaimBlockTileEntity) tileentity).getSchematicPos(), message.getRotation(),
 								world.getBlockState(message.getPos()).getValue(BlockHorizontal.FACING),
-								ctx.getServerHandler().player);
+								ctx.getServerHandler().player, message.shouldReplaceAir());
 						((ClaimBlockTileEntity) tileentity).setActive(false);
 						world.setBlockState(message.getPos(), Blocks.AIR.getDefaultState(), 3);
 					}
@@ -46,19 +46,22 @@ public class MessageBuildSchematicFromTileEntity implements IMessage {
 
 	private BlockPos pos;
 	private int rotation;
+	private boolean replaceAir;
 
 	public MessageBuildSchematicFromTileEntity() {
 	}
 
-	public MessageBuildSchematicFromTileEntity(BlockPos pos, int rotation) {
+	public MessageBuildSchematicFromTileEntity(BlockPos pos, int rotation, boolean replaceAir) {
 		this.pos = pos;
 		this.rotation = rotation;
+		this.replaceAir = replaceAir;
 	}
 
 	@Override
 	public void fromBytes(ByteBuf buf) {
 		pos = BlockPos.fromLong(buf.readLong());
 		rotation = buf.readInt();
+		replaceAir = buf.readBoolean();
 	}
 
 	/**
@@ -72,10 +75,15 @@ public class MessageBuildSchematicFromTileEntity implements IMessage {
 		return rotation;
 	}
 
+	public boolean shouldReplaceAir() {
+		return replaceAir;
+	}
+
 	@Override
 	public void toBytes(ByteBuf buf) {
 		buf.writeLong(pos.toLong());
 		buf.writeInt(rotation);
+		buf.writeBoolean(replaceAir);
 	}
 
 }

@@ -72,7 +72,7 @@ public class CommandBuildSchematic extends CommandBase {
 					facing = EnumFacing.valueOf(args[4]);
 				}
 
-				schem.build(world, pos, rotation, facing, sender);
+				schem.build(world, pos, rotation, facing, sender, true);
 			} else {
 				throw new CommandException("Must have schematic item equipped", new Object[0]);
 			}
@@ -94,22 +94,20 @@ public class CommandBuildSchematic extends CommandBase {
 				throw new CommandException("Location should be in numbers", new Object[0]);
 			}
 
-			if (args.length > 3) {
-				try {
-					rotation = Integer.parseInt(args[3]);
-					if (Math.abs(rotation) > 3) {
-						if (rotation > 0) {
-							rotation = (rotation / 90) % 4;
-						} else {
-							rotation = 4 - Math.abs((rotation / 90) % 4);
-						}
+			try {
+				rotation = Integer.parseInt(args[3]);
+				if (Math.abs(rotation) > 3) {
+					if (rotation > 0) {
+						rotation = (rotation / 90) % 4;
+					} else {
+						rotation = 4 - Math.abs((rotation / 90) % 4);
 					}
-				} catch (NumberFormatException ex) {
-					throw new CommandException("Cannot Parse Rotation", new Object[0]);
 				}
+			} catch (NumberFormatException ex) {
+				throw new CommandException("Cannot Parse Rotation", new Object[0]);
 			}
 
-			schem.build(world, pos, rotation, facing, sender);
+			schem.build(world, pos, rotation, facing, sender, Boolean.parseBoolean(args[6]));
 		}
 	}
 

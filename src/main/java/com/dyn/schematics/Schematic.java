@@ -174,7 +174,8 @@ public class Schematic {
 		readFromNBT(compound);
 	}
 
-	public void build(World world, BlockPos start, int rotation, EnumFacing facing, ICommandSender sender) {
+	public void build(World world, BlockPos start, int rotation, EnumFacing facing, ICommandSender sender,
+			final boolean replaceAir) {
 		if ((world == null) || (start == null)) {
 			return;
 		}
@@ -220,7 +221,7 @@ public class Schematic {
 				int x = i % width;
 				int z = ((i - x) / width) % length;
 				int y = (((i - x) / width) - z) / length;
-				place(world, start, rotation, x, y, z, true);
+				place(world, start, rotation, x, y, z, true, replaceAir);
 
 			}
 
@@ -228,7 +229,7 @@ public class Schematic {
 				int x = (i) % width;
 				int z = (((i) - x) / width) % length;
 				int y = ((((i) - x) / width) - z) / length;
-				place(world, start, rotation, x, y, z, false);
+				place(world, start, rotation, x, y, z, false, replaceAir);
 			}
 		} else {
 			sender.sendMessage(new TextComponentString("Building Schematic: " + name));
@@ -256,12 +257,14 @@ public class Schematic {
 				} else if (buildQueue.size() > getSize()) {
 					for (int i = 0; (i < 25000) && (buildQueue.size() >= getSize()); i++) {
 						BlockPos pos = buildQueue.poll();
-						place(world, immutable_pos, immutable_rotation, pos.getX(), pos.getY(), pos.getZ(), true);
+						place(world, immutable_pos, immutable_rotation, pos.getX(), pos.getY(), pos.getZ(), true,
+								replaceAir);
 					}
 				} else {
 					for (int i = 0; (i < 25000) && !buildQueue.isEmpty(); i++) {
 						BlockPos pos = buildQueue.poll();
-						place(world, immutable_pos, immutable_rotation, pos.getX(), pos.getY(), pos.getZ(), false);
+						place(world, immutable_pos, immutable_rotation, pos.getX(), pos.getY(), pos.getZ(), false,
+								replaceAir);
 					}
 				}
 			}, 500, 500, TimeUnit.MILLISECONDS);
@@ -363,12 +366,14 @@ public class Schematic {
 
 	// we need to go over it twice because things like torches and other blocks
 	// wont place right
-	public void place(World world, BlockPos start, int rotation, int x, int y, int z, boolean flag) {
+	public void place(World world, BlockPos start, int rotation, int x, int y, int z, boolean flag,
+			boolean replaceAir) {
 		int i = xyzToIndex(x, y, z);
 
 		Block b = Block.getBlockById(blockIds[i]);
 		if ((b == null) || (flag && !b.getDefaultState().isFullBlock() && (b != Blocks.AIR))
-				|| (!flag && (b.getDefaultState().isFullBlock() || (b == Blocks.AIR)))) {
+				|| (!flag && (b.getDefaultState().isFullBlock() || (b == Blocks.AIR)))
+				|| (!replaceAir && (b == Blocks.AIR))) {
 			return;
 		}
 

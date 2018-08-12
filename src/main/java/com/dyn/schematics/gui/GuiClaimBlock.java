@@ -36,15 +36,70 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 
 @SideOnly(Side.CLIENT)
 public class GuiClaimBlock extends GuiContainer {
+	@SideOnly(Side.CLIENT)
+	class ToggleButton extends GuiButton {
+		private boolean toggled;
+
+		public ToggleButton(int buttonId, int x, int y, int widthIn, int heightIn, boolean toggled) {
+			super(buttonId, x, y, widthIn, heightIn, "");
+			this.toggled = toggled;
+		}
+
+		@Override
+		public void drawButton(Minecraft mc, int mouseX, int mouseY, float partialTicks) {
+			super.drawButton(mc, mouseX, mouseY, partialTicks);
+			mc.getTextureManager().bindTexture(new ResourceLocation("textures/gui/container/beacon.png"));
+			GlStateManager.disableDepth();
+			this.drawTexturedModalRect(x + 1, y + 1, (toggled ? 90 : 112), 220, 18, 18);
+			GlStateManager.enableDepth();
+		}
+
+		@Override
+		protected int getHoverState(boolean mouseOver) {
+			int i = toggled ? 0 : 1;
+			if (mouseOver) {
+				i = 2;
+			}
+
+			return i;
+		}
+
+		/**
+		 * @return the toggled
+		 */
+		public boolean isToggled() {
+			return toggled;
+		}
+
+		@Override
+		public boolean mousePressed(Minecraft mc, int mouseX, int mouseY) {
+			boolean pressed = super.mousePressed(mc, mouseX, mouseY);
+			if (pressed) {
+				toggled = !toggled;
+			}
+			return pressed;
+		}
+
+		/**
+		 * @param toggled
+		 *            the toggled to set
+		 */
+		public void setToggled(boolean toggled) {
+			this.toggled = toggled;
+		}
+	}
+
 	public static final int ID = 1;
 	private static final ResourceLocation PLANK = new ResourceLocation("textures/blocks/planks_oak.png");
 	private static final ResourceLocation SCHEM = new ResourceLocation("schematics",
 			"textures/items/schematic_empty.png");
-	private static final ResourceLocation SLOTS = new ResourceLocation("textures/gui/container/horse.png");
 
+	private static final ResourceLocation SLOTS = new ResourceLocation("textures/gui/container/horse.png");
 	/** Amount scrolled in Creative mode inventory (0 = top, 1 = bottom) */
 	private float currentScroll;
 	private ClaimBlockTileEntity tile;
+
+	private ToggleButton airButton;
 
 	public GuiClaimBlock(EntityPlayer player, World worldIn, BlockPos pos) {
 		super(new ContainerClaimBlock(player, worldIn, pos));
@@ -62,7 +117,8 @@ public class GuiClaimBlock extends GuiContainer {
 				if ((Minecraft.getMinecraft().playerController.getCurrentGameType() == GameType.CREATIVE)
 						|| !ModConfig.getConfig().req_resources) {
 					NetworkManager.sendToServer(new MessageBuildSchematicFromTileEntity(tile.getPos(),
-							SchematicRenderingRegistry.getSchematicRotation(tile.getSchematic())));
+							SchematicRenderingRegistry.getSchematicRotation(tile.getSchematic()),
+							airButton.isToggled()));
 					SchematicRenderingRegistry.removeSchematic(tile.getSchematic());
 					mc.player.closeScreen();
 				} else {
@@ -79,7 +135,8 @@ public class GuiClaimBlock extends GuiContainer {
 						}
 					}
 					NetworkManager.sendToServer(new MessageBuildSchematicFromTileEntity(tile.getPos(),
-							SchematicRenderingRegistry.getSchematicRotation(tile.getSchematic())));
+							SchematicRenderingRegistry.getSchematicRotation(tile.getSchematic()),
+							airButton.isToggled()));
 					SchematicRenderingRegistry.removeSchematic(tile.getSchematic());
 					mc.player.closeScreen();
 				}
@@ -132,6 +189,7 @@ public class GuiClaimBlock extends GuiContainer {
 								tile.getSchematic().getName().replaceAll("[_-]", " ").replaceAll("\\d{4,}", "")),
 				i + 65, j + 7, -1);
 		drawString(fontRenderer, "Remaining Required Materials:", i + 47, j + 22, -1);
+		drawString(fontRenderer, "Replace Blocks with Air?", (int) (width * .34), (int) (height * .86), -1);
 	}
 
 	private void drawScaledTexturedRect(int x, int y, float zLevel, int width, int height) {
@@ -193,8 +251,7 @@ public class GuiClaimBlock extends GuiContainer {
 	@Override
 	public void initGui() {
 		buttonList.add(new GuiButton(0, (int) (width * .75), (int) (height * .84), 50, 20, "Build"));
-		// this.buttonList.add(new GuiButton(1, (int) (this.width * .75), (int)
-		// (this.height * .8), 20, 20, "X"));
+		buttonList.add(airButton = new ToggleButton(1, (int) (width * .28), (int) (height * .84), 20, 20, true));
 		super.initGui();
 
 	}
