@@ -117,7 +117,8 @@ public class BlockSchematicClaim extends BlockHorizontal implements ITileEntityP
 			compound.setInteger("cost", ((ClaimBlockTileEntity) tileentity).getSchematic().getTotalMaterialCost());
 			NBTTagList materials = new NBTTagList();
 			int counter = 0;
-			for (Entry<SimpleItemStack, Integer> material : ((ClaimBlockTileEntity) tileentity).getSchematic().getRequiredMaterials().entrySet()) {
+			for (Entry<SimpleItemStack, Integer> material : ((ClaimBlockTileEntity) tileentity).getSchematic()
+					.getRequiredMaterials().entrySet()) {
 				if (counter > 5) {
 					break;
 				}
@@ -219,10 +220,12 @@ public class BlockSchematicClaim extends BlockHorizontal implements ITileEntityP
 							((ClaimBlockTileEntity) tileentity).getSchematic().writeToNBT(compound);
 							compound.setString("title", ((ClaimBlockTileEntity) tileentity).getSchematic().getName()
 									.replace("" + ((ClaimBlockTileEntity) tileentity).getSchematicPos().toLong(), ""));
-							compound.setInteger("cost", ((ClaimBlockTileEntity) tileentity).getSchematic().getTotalMaterialCost());
+							compound.setInteger("cost",
+									((ClaimBlockTileEntity) tileentity).getSchematic().getTotalMaterialCost());
 							NBTTagList materials = new NBTTagList();
 							int counter = 0;
-							for (Entry<SimpleItemStack, Integer> material : ((ClaimBlockTileEntity) tileentity).getSchematic().getRequiredMaterials().entrySet()) {
+							for (Entry<SimpleItemStack, Integer> material : ((ClaimBlockTileEntity) tileentity)
+									.getSchematic().getRequiredMaterials().entrySet()) {
 								if (counter > 5) {
 									break;
 								}

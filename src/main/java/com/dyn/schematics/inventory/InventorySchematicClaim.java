@@ -31,7 +31,7 @@ public class InventorySchematicClaim extends InventoryBasic {
 		if (ModConfig.getConfig().req_exact) {
 			// Checks if the metadata is equal as well
 			SimpleItemStack meta_key = new SimpleItemStack(itemstack);
-			if(totalMaterials.containsKey(meta_key)) {
+			if (totalMaterials.containsKey(meta_key)) {
 				int j = Math.min(itemstack.getCount(), totalMaterials.get(meta_key));
 
 				if (j > 0) {
@@ -45,7 +45,7 @@ public class InventorySchematicClaim extends InventoryBasic {
 			}
 		} else {
 			SimpleItemStack key = new SimpleItemStack(itemstack.getItem(), 0);
-			if(totalMaterials.containsKey(key)) {
+			if (totalMaterials.containsKey(key)) {
 				int j = Math.min(itemstack.getCount(), totalMaterials.get(key));
 
 				if (j > 0) {

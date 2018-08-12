@@ -119,7 +119,8 @@ public class ItemSchematic extends Item {
 			items.add(new ItemStack(this, 1, 0));
 			for (String schemName : SchematicRegistry.enumerateSchematics()) {
 				Schematic schem = SchematicRegistry.load(schemName);
-				if ((schem != null) && (schem.getSize() < ModConfig.getConfig().max_size) && schem.getTotalMaterialCost() > 0) {
+				if ((schem != null) && (schem.getSize() < ModConfig.getConfig().max_size)
+						&& (schem.getTotalMaterialCost() > 0)) {
 					NBTTagCompound compound = new NBTTagCompound();
 					schem.writeToNBT(compound);
 					compound.setString("title", schemName);

@@ -20,7 +20,6 @@ import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.renderer.Tessellator;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.InventoryPlayer;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TextFormatting;
@@ -40,12 +39,10 @@ public class GuiArchitect extends GuiContainer {
 			"textures/gui/resource_packs.png");
 
 	private final ContainerArchitect desk;
-	private final InventoryPlayer playerInventory;
 	private boolean useLocal;
 
 	public GuiArchitect(EntityPlayer player, World worldIn) {
 		super(new ContainerArchitect(player, worldIn));
-		playerInventory = player.inventory;
 		desk = (ContainerArchitect) inventorySlots;
 	}
 
@@ -56,7 +53,7 @@ public class GuiArchitect extends GuiContainer {
 	@Override
 	protected void actionPerformed(GuiButton button) throws IOException {
 		button.displayString = button.displayString == "Local" ? "Remote" : "Local";
-		useLocal = button.displayString == "Local";
+		// useLocal = button.displayString == "Local";
 	}
 
 	/**
@@ -139,7 +136,7 @@ public class GuiArchitect extends GuiContainer {
 
 				if (!desk.getSlot(2).getHasStack()) {
 					flag = false;
-				} else if (!desk.getSlot(2).canTakeStack(playerInventory.player)) {
+				} else if (!desk.getSlot(2).canTakeStack(mc.player)) {
 					i = 16736352;
 				}
 
@@ -196,10 +193,10 @@ public class GuiArchitect extends GuiContainer {
 	@Override
 	public void initGui() {
 		if (ModConfig.getConfig().can_use_client_schematic) {
-			int i = (width - xSize) / 2;
-			int j = (height - ySize) / 2;
-			buttonList.add(new GuiButton(0, i + 170, j + 5, 40, 20, "Local"));
-			useLocal = true;
+			// int i = (width - xSize) / 2;
+			// int j = (height - ySize) / 2;
+			// buttonList.add(new GuiButton(0, i + 170, j + 5, 40, 20, "Local"));
+			// useLocal = false;
 		}
 		super.initGui();
 

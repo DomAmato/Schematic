@@ -90,7 +90,7 @@ public class CommandSaveSchematic extends CommandBase {
 		}
 
 		Schematic schem = new Schematic(name.split(Pattern.quote("."))[0], nbt);
-		
+
 		ItemStack stack = CommandBase.getCommandSenderAsPlayer(sender).getHeldItemMainhand();
 		if (stack.getItem() instanceof ItemSchematic) {
 			nbt.setString("title", name.split(Pattern.quote("."))[0]);

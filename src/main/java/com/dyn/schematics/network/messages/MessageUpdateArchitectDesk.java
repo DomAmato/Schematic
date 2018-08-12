@@ -17,8 +17,8 @@ public class MessageUpdateArchitectDesk implements IMessage {
 			SchematicMod.proxy.addScheduledTask(() -> {
 				EntityPlayerMP player = ctx.getServerHandler().player;
 				ContainerArchitect desk = (ContainerArchitect) player.openContainer;
+				desk.detectAndSendChanges();
 				desk.updateSchematicContents(message.getDir());
-
 			});
 			return null;
 		}
